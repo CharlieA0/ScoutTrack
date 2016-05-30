@@ -118,7 +118,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryRank() throws Sql2oException, NoRecordFoundException {
-		int rankID = super.queryInt(DatabaseNames.RANK_TABLE, "name", id);
+		int rankID = super.queryInt(DatabaseNames.SCOUT_TABLE, "rankid", id);
 		return super.queryString(DatabaseNames.RANK_TABLE, "name", rankID);
 	}
 	
@@ -221,7 +221,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return id of the scout in database or -1 if database error
 	 */
 	private int storeScoutData(String name, String email, String pwd, byte[] salt, int age, int troopID, int rankID) {
-		String sql = "insert into "+ DatabaseNames.SCOUT_TABLE + "(name, email, pwd, salt, age, id, rankid) VALUES (:name, :email, :password, :salt, :age, :troopID, :rankID)";
+		String sql = "insert into "+ DatabaseNames.SCOUT_TABLE + "(name, email, pwd, salt, age, troopid, rankid) VALUES (:name, :email, :password, :salt, :age, :troopID, :rankID)";
 		try (Connection conn = sql2o.beginTransaction()) {
 			int id = conn.createQuery(sql, true)
 				.addParameter("name", name)

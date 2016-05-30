@@ -108,7 +108,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 */
 	public void updateTroop(String troop) throws Sql2oException, NoRecordFoundException {
 		int troopID = super.searchId(DatabaseNames.TROOP_TABLE, "name", troop);
-		super.updateInt(DatabaseNames.LEADER_TABLE, "id", troopID, id);
+		super.updateInt(DatabaseNames.LEADER_TABLE, "troopid", troopID, id);
 	}	
 	
 	/**
