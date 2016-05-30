@@ -187,7 +187,7 @@ public class DatabaseSearcher {
 	 * @throws NoRecordFoundException thrown if no record has rankName
 	 */
 	public int idOfRank(String rankName) throws Sql2oException, NoRecordFoundException {
-		return searchId(DatabaseNames.RANK_TABLE, "name", rankName);
+		return searchId(Rank.TABLE, "name", rankName);
 	}
 	
 	/**
@@ -198,6 +198,6 @@ public class DatabaseSearcher {
 	 * @throws NoRecordFoundException thrown if no record with troopName is found
 	 */
 	public int idOfTroop(String troopName) throws Sql2oException, NoRecordFoundException {
-		return searchId(DatabaseNames.TROOP_TABLE, "name", troopName);
+		return searchId(Troop.TABLE, "name", troopName);
 	}
 }

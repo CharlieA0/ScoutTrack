@@ -5,6 +5,9 @@ import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
 public class Troop extends DatabaseSearcher implements DatabaseObject{
+	protected static final String TABLE = "troops";
+	protected static final String ID = "troop_id";
+	protected static final String NAME = "troop_name";
 	
 	private int id;
 	private Sql2o sql2o;
@@ -48,7 +51,7 @@ public class Troop extends DatabaseSearcher implements DatabaseObject{
 	 * @throws Sql2oException thrown if database error
 	 */
 	public String queryName() throws Sql2oException, NoRecordFoundException {
-		return super.queryString(DatabaseNames.TROOP_TABLE, "name", id);
+		return super.queryString(Troop.TABLE, Troop.NAME, id);
 	}
 	
 	/**
@@ -57,7 +60,7 @@ public class Troop extends DatabaseSearcher implements DatabaseObject{
 	 * @throws Sql2oException thrown if database error
 	 */
 	public void updateName(String name) throws Sql2oException {
-		super.updateString(DatabaseNames.TROOP_TABLE, "name", name, id);
+		super.updateString(Troop.TABLE, Troop.NAME, name, id);
 	}
 	
 	/**
@@ -67,7 +70,7 @@ public class Troop extends DatabaseSearcher implements DatabaseObject{
 	 * @throws Sql2oException thrown if database error
 	 */
 	public List <Integer> queryScouts() throws Sql2oException, NoRecordFoundException {
-		return super.searchIds(DatabaseNames.SCOUT_TABLE, "troopid", id);
+		return super.searchIds(Scout.TABLE, Troop.ID, id);
 	}
 	
 	/**
@@ -77,7 +80,7 @@ public class Troop extends DatabaseSearcher implements DatabaseObject{
 	 * @throws Sql2oException  thrown if database error
 	 */
 	public List <Integer> queryLeaders() throws Sql2oException, NoRecordFoundException {
-		return super.searchIds(DatabaseNames.LEADER_TABLE, "troopid", id);
+		return super.searchIds(Leader.TABLE, Troop.ID, id);
 	}
 	
 	/**
@@ -87,7 +90,7 @@ public class Troop extends DatabaseSearcher implements DatabaseObject{
 	 * @throws thrown if database error
 	 */
 	private int addTroop(String name)throws Sql2oException {
-		String sql = "INSERT INTO " + DatabaseNames.TROOP_TABLE + " (name) VALUES (:name);";
+		String sql = "INSERT INTO " + DatabaseNames.TROOP_TABLE + " (" + Troop.NAME + ") VALUES (:name);";
 		try (Connection conn = sql2o.beginTransaction()) {
 			int id = conn.createQuery(sql, true).addParameter("name", name).executeUpdate().getKey(Integer.class);
 			conn.commit();

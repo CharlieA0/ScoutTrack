@@ -5,6 +5,13 @@ import org.sql2o.Sql2oException;
 import java.security.SecureRandom;
 
 public class Leader extends DatabaseSearcher implements DatabaseObject, User{
+	protected static final String TABLE = "leaders";
+	protected static final String ID = "leader_id";
+	protected static final String NAME = "leader_name";
+	protected static final String EMAIL = "leader_email";
+	protected static final String PWD = "leader_pwd";
+	protected static final String SALT = "leader_salt";
+	
 	private final Sql2o sql2o;
 	private final int id;
 	
@@ -38,7 +45,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return true if successful, else false
 	 */
 	public void destroy() throws Sql2oException {
-		super.deleteFrom(DatabaseNames.LEADER_TABLE, id);
+		super.deleteFrom(Leader.TABLE, id);
 	}
 	
 	/**
@@ -56,7 +63,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryName() throws Sql2oException, NoRecordFoundException {
-		return super.queryString(DatabaseNames.LEADER_TABLE, "name", id);
+		return super.queryString(Leader.TABLE, Leader.NAME, id);
 	}
 	
 	/**
@@ -65,7 +72,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return true if successful, else false
 	 */
 	public void updateName(String name) throws Sql2oException {
-		super.updateString(DatabaseNames.LEADER_TABLE, "name", name, id);
+		super.updateString(Leader.TABLE, Leader.NAME, name, id);
 	}
 	
 	/**
@@ -75,7 +82,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryEmail() throws Sql2oException, NoRecordFoundException {
-		return super.queryString(DatabaseNames.LEADER_TABLE, "email", id);
+		return super.queryString(Leader.TABLE, Leader.EMAIL, id);
 	}
 	
 	/**
@@ -84,7 +91,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return true if successful, else false
 	 */
 	public void updateEmail(String email) throws Sql2oException {
-		super.updateString(DatabaseNames.LEADER_TABLE, "email", email, id);
+		super.updateString(Leader.TABLE, Leader.EMAIL, email, id);
 	}
 	
 	/**
@@ -94,8 +101,8 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryTroop() throws Sql2oException, NoRecordFoundException {
-		int troopID = super.queryInt(DatabaseNames.LEADER_TABLE, "troopID", id);
-		return super.queryString(DatabaseNames.TROOP_TABLE, "name", troopID);
+		int troopID = super.queryInt(Leader.TABLE, Troop.ID, id);
+		return super.queryString(Troop.TABLE, Troop.NAME, troopID);
 	}
 
 	/**
@@ -106,8 +113,8 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public void updateTroop(String troop) throws Sql2oException, NoRecordFoundException {
-		int troopID = super.searchId(DatabaseNames.TROOP_TABLE, "name", troop);
-		super.updateInt(DatabaseNames.LEADER_TABLE, "troopID", troopID, id);
+		int troopID = super.searchId(Troop.TABLE, Troop.NAME, troop);
+		super.updateInt(Leader.TABLE, Troop.ID, troopID, id);
 	}	
 	
 	/**
@@ -117,7 +124,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String querySalt() throws Sql2oException, NoRecordFoundException {
-		return super.queryString(DatabaseNames.LEADER_TABLE, "salt", id);
+		return super.queryString(Leader.TABLE, Leader.SALT, id);
 	}
 	
 	/**
@@ -126,7 +133,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return true if successful, else false
 	 */
 	public void updatePwd(String pwd) throws Sql2oException {
-		super.updateString(DatabaseNames.LEADER_TABLE, "pwd", pwd, id);
+		super.updateString(Leader.TABLE, Leader.PWD, pwd, id);
 	}
 	
 	/**
@@ -163,7 +170,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return
 	 */
 	private int storeLeader(String name, String email, String pwd, byte[] salt, int troopID) {
-		String sql = "INSERT INTO " + DatabaseNames.LEADER_TABLE + " (name, email, pwd, salt, troopID) VALUES (:name, :email, :pwd, :salt, :troopID);";
+		String sql = "INSERT INTO " + Leader.TABLE + " (" + Leader.NAME + ", " + Leader.EMAIL + ", " + Leader.PWD + ", " + Leader.SALT + ", " + Troop.ID + ") VALUES (:name, :email, :pwd, :salt, :troopID);";
 		try(Connection conn = sql2o.beginTransaction()) {
 			int id = conn.createQuery(sql, true).addParameter("name", name).addParameter("email", email).addParameter("pwd", pwd).addParameter("salt", salt).addParameter("troopID", troopID)
 				.executeUpdate().getKey(Integer.class);
