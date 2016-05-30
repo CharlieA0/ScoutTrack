@@ -42,7 +42,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return true on success else false
 	 */
 	public void destroy() {
-		super.deleteFrom(Scout.TABLE, id);
+		super.deleteFrom(DatabaseNames.SCOUT_TABLE, id);
 	}
 	
 	/**
@@ -60,7 +60,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryName() throws Sql2oException, NoRecordFoundException {
-		return super.queryString(Scout.TABLE, Scout.NAME, id);
+		return super.queryString(DatabaseNames.SCOUT_TABLE, "name", id);
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException
 	 */
 	public void updateName(String name) throws Sql2oException {
-		super.updateString(Scout.TABLE, Scout.NAME, name, id);
+		super.updateString(DatabaseNames.SCOUT_TABLE, "name", name, id);
 	}
 	
 	/**
@@ -79,7 +79,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryEmail() throws Sql2oException, NoRecordFoundException {
-		return super.queryString(Scout.TABLE, Scout.EMAIL, id);
+		return super.queryString(DatabaseNames.SCOUT_TABLE, "email", id);
 	}
 	
 	/**
@@ -88,7 +88,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return true on success else false
 	 */
 	public void updateEmail(String email) throws Sql2oException {
-		super.updateString(Scout.TABLE, Scout.EMAIL, email, id);
+		super.updateString(DatabaseNames.SCOUT_TABLE, "email", email, id);
 	}
 
 	
@@ -99,7 +99,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryPwd() throws Sql2oException, NoRecordFoundException {
-		return super.queryString(Scout.TABLE, Scout.EMAIL, id);
+		return super.queryString(DatabaseNames.SCOUT_TABLE, "email", id);
 	}
 	
 	/**
@@ -107,7 +107,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return true on success, else false
 	 */
 	public void updatePwd(String pwd) throws Sql2oException {
-		super.updateString(Scout.TABLE, Scout.PWD, pwd, id);
+		super.updateString(DatabaseNames.SCOUT_TABLE, "pwd", pwd, id);
 	}
 
 	
@@ -118,8 +118,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryRank() throws Sql2oException, NoRecordFoundException {
-		int rankID = super.queryInt(Scout.NAME, Rank.NAME, id);
-		return super.queryString(Rank.TABLE, Rank.NAME, rankID);
+		int rankID = super.queryInt(DatabaseNames.RANK_TABLE, "name", id);
+		return super.queryString(DatabaseNames.RANK_TABLE, "name", rankID);
 	}
 	
 	/**
@@ -130,8 +130,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public void updateRank(String rank) throws Sql2oException, NoRecordFoundException {
-		int rankID = super.searchId(Rank.TABLE, Rank.NAME, rank);
-		super.updateInt(Scout.TABLE, Rank.ID, rankID, id);
+		int rankID = super.searchId(DatabaseNames.RANK_TABLE, "name", rank);
+		super.updateInt(DatabaseNames.SCOUT_TABLE, "rankid", rankID, id);
 	}
 	
 	
@@ -141,7 +141,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws NoRecordFoundException 
 	 */
 	public int queryAge() throws NoRecordFoundException, Sql2oException {
-			return super.queryInt(Scout.TABLE, Scout.AGE, id);
+			return super.queryInt(DatabaseNames.SCOUT_TABLE, "age", id);
 	}
 	
 	/**
@@ -149,7 +149,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return true on success, else false
 	 */
 	public void updateAge(int age) throws Sql2oException {
-		super.updateInt(Scout.TABLE, Scout.AGE, age, id);
+		super.updateInt(DatabaseNames.SCOUT_TABLE, "age", age, id);
 	}
 
 	/**
@@ -159,8 +159,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String queryTroop() throws Sql2oException, NoRecordFoundException {
-		int troopID = super.queryInt(Scout.TABLE, Troop.ID, id);
-		return super.queryString(Troop.TABLE, Troop.NAME, troopID);
+		int troopID = super.queryInt(DatabaseNames.SCOUT_TABLE, "troopid", id);
+		return super.queryString(DatabaseNames.TROOP_TABLE, "name", troopID);
 	}
 	
 	/**
@@ -169,8 +169,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public void updateTroop(String troop) throws Sql2oException, NoRecordFoundException {
-		int troopID = super.searchId(Troop.TABLE, Troop.NAME, troop);
-		super.updateInt(Scout.TABLE, Troop.ID, troopID, id);
+		int troopID = super.searchId(DatabaseNames.TROOP_TABLE, "name", troop);
+		super.updateInt(DatabaseNames.SCOUT_TABLE, "troopid", troopID, id);
 	}
 	
 	/**
@@ -180,7 +180,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException 
 	 */
 	public String querySalt() throws Sql2oException, NoRecordFoundException {
-		return super.queryString(Scout.TABLE, "salt", id);
+		return super.queryString(DatabaseNames.SCOUT_TABLE, "salt", id);
 	}
 		
 	/**
@@ -221,7 +221,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @return id of the scout in database or -1 if database error
 	 */
 	private int storeScoutData(String name, String email, String pwd, byte[] salt, int age, int troopID, int rankID) {
-		String sql = "insert into "+ DatabaseNames.SCOUT_TABLE + "(" + Scout.NAME + ", " + Scout.EMAIL + ", " + Scout.PWD + ", " + Scout.SALT + ", " + Scout.AGE + ", " + Troop.ID + ", " + Rank.ID + ") VALUES (:name, :email, :password, :salt, :age, :troopID, :rankID)";
+		String sql = "insert into "+ DatabaseNames.SCOUT_TABLE + "(name, email, pwd, salt, age, id, rankid) VALUES (:name, :email, :password, :salt, :age, :troopID, :rankID)";
 		try (Connection conn = sql2o.beginTransaction()) {
 			int id = conn.createQuery(sql, true)
 				.addParameter("name", name)
