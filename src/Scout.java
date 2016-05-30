@@ -6,14 +6,7 @@ import java.security.SecureRandom;
 
 
 public class Scout extends DatabaseSearcher implements DatabaseObject, User{
-	protected static final String TABLE = "scouts";
-	protected static final String ID = "scout_id";
-	protected static final String NAME = "scout_name";
-	protected static final String EMAIL = "scout_email";
-	protected static final String SALT = "scout_salt";	
-	protected static final String PWD = "scout_pwd";
-	protected static final String RANK = "scout_rank";
-	protected static final String AGE = "scout_age";
+
 	
 	private int id;
 	private Sql2o sql2o;
