@@ -20,11 +20,15 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @param rankID scout's rank's primary key in database
 	 * @param age scout's age
 	 * @param troopID scout's troop's primary key in database
+	 * @throws InvalidDatabaseOperation thrown if invalid operation is performed on database
+	 * @throws Sql2oException thrown if database error occurs
 	 */
-	public Scout(Sql2o sql2o, String name, String email, String pwd, int rankID, int age, int troopID) {
+	public Scout(Sql2o sql2o, String name, String email, String pwd, int rankID, int age, int troopID, int[] reqID, int[] mbID) throws Sql2oException, InvalidDatabaseOperation {
 		super(sql2o);
 		this.sql2o = sql2o;
 		this.id = addScout(name, email, pwd, rankID, age, troopID);
+		addReq(reqID);
+		addMB(mbID);
 	}
 	
 	/**
@@ -125,7 +129,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Updates scout's rank in database
 	 * @param the scout's new rank
-	 * @return true if sucessful, else false
+	 * @return true if successful, else false
 	 * @throws NoRecordFoundException 
 	 * @throws Sql2oException 
 	 */
@@ -196,6 +200,30 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	private int addScout(String name, String email, String pwd, int rankID, int age, int troopID) {
 		byte[] salt = getSalt();
 		return storeScoutData(name, email, pwd, salt, age, troopID, rankID);
+	}
+	
+	/**
+	 * adds requirement ids to scout - requirement join table
+	 * @param reqID array of requirement ids to add
+	 * @throws Sql2oException thrown on database error
+	 * @throws InvalidDatabaseOperation thrown if invalid operation is performed on database
+	 */
+	private void addReq(int[] reqID) throws Sql2oException, InvalidDatabaseOperation {
+		int[] scoutID = new int[reqID.length];
+		for(int i = 0; i < scoutID.length; i++) scoutID[i] = id;
+		super.addJoinRecords(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", "reqid", scoutID, reqID);
+	}
+	
+	/**
+	 * adds meritbadges to scout-meritbadge join table
+	 * @param mbID array of meritbadge ids
+	 * @throws Sql2oException thrown if database error
+	 * @throws InvalidDatabaseOperation thrown if invalid operation is performed on database
+	 */
+	private void addMB(int[] mbID) throws Sql2oException, InvalidDatabaseOperation {
+		int[] scoutID = new int[mbID.length];
+		for(int i = 0; i < scoutID.length; i++) scoutID[i] = id;
+		super.addJoinRecords(DatabaseNames.SCOUT_MB_TABLE, "scoutid", "meritbadgeid", scoutID, mbID);
 	}
 	
 	/**

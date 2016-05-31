@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.sql2o.Connection;
+import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
@@ -95,6 +96,40 @@ public class DatabaseSearcher {
 			System.out.println(e);
 			throw e;
 		}
+	}
+	
+	/**
+	 * Adds records to join table
+	 * @param table the table to add the records to
+	 * @param firstColumn the name of the first column of the join table
+	 * @param secondColumn the name of the second column of the join table
+	 * @param firstID array of ids to be inserted into the first column
+	 * @param secondID array of ids to be inserted into the second column
+	 * @throws InvalidDatabaseOperation thrown if lengths of id arrays are not the same
+	 * @throws Sql2oException thrown if database error
+	 */
+	public void addJoinRecords(String table, String firstColumn, String secondColumn, int[] firstID, int[] secondID) throws Sql2oException, InvalidDatabaseOperation {
+		if (firstID.length != secondID.length) throw new InvalidDatabaseOperation("add join table records");
+		
+		//Construct query with fence post correction
+		String sql = "INSERT INTO " + table + " (" + firstColumn + ", " + secondColumn + ") VALUES ";
+		for(int i = 0; i < firstID.length - 1; i++) {
+			sql += "(:firstID" + i + ", :secondID" + i + "), ";
+		}
+		sql += "(:firstID" + (firstID.length - 1) + ", :secondID" + (secondID.length - 1) + ")";
+		
+		//make query
+		try (Connection conn = sql2o.beginTransaction()){
+			Query query = conn.createQuery(sql);
+			for(int i = 0; i < firstID.length; i++){
+				query.addParameter("firstID" + i, firstID[i]).addParameter("secondID" + i, secondID[i]);
+			}
+			query.executeUpdate();
+			conn.commit();
+		} catch (Sql2oException e) {
+			System.out.println(e);
+			throw e;
+		}			
 	}
 	
 	/**
@@ -199,5 +234,35 @@ public class DatabaseSearcher {
 	 */
 	public int idOfTroop(String troopName) throws Sql2oException, NoRecordFoundException {
 		return searchId(DatabaseNames.TROOP_TABLE, "name", troopName);
+	}
+	
+	/**
+	 * Retrieves id of requirement with passed name
+	 * @param reqName the name of the requirement 
+	 * @return the id of the requirement
+	 * @throws Sql2oException thrown by database error
+	 * @throws NoRecordFoundException thrown if no record is found
+	 */
+	public int idOfRequirement(String reqName, int rankid) throws Sql2oException, NoRecordFoundException {
+		String sql = "SELECT id FROM " + DatabaseNames.REQ_TABLE + " WHERE name = :name AND rankid = :rankid";
+		try (Connection conn = sql2o.open()) {
+			String response = conn.createQuery(sql).addParameter("name", reqName).addParameter("rankid", rankid).executeAndFetchFirst(String.class);
+			if(response == null) throw new NoRecordFoundException();
+			return Integer.parseInt(response);
+		} catch(Sql2oException e) {
+			System.out.println(e);
+			throw e;
+		}
+	}
+	
+	/**
+	 * Retrieves id of merit badge record with passed name
+	 * @param mbName name of the merit badge
+	 * @return id of the merit badge
+	 * @throws Sql2oException thrown by database error
+	 * @throws NoRecordFoundException thrown if no record is found
+	 */
+	public int idOfMeritbadge(String mbName) throws Sql2oException, NoRecordFoundException {
+		return searchId(DatabaseNames.MB_TABLE, "name", mbName);
 	}
 }
