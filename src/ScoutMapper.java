@@ -4,14 +4,19 @@ import java.util.List;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class ScoutMapper extends UserMapper {
 	private final int MAX_SCOUT_AGE = 18;
 	private final int MIN_SCOUT_AGE = 10;
+	private final int MAX_REQ_NUMBER = 250;
+	private final int MAX_REQ_LENGTH = 5;
+	private final int MAX_MB_NUMBER = 250;
+	private final int MAX_MB_LENGTH = 70;
 	
 	private final List <String> FIELDS;
-	private final String[] SCOUT_FIELDS = {"rank", "age"};
+	private final String[] SCOUT_FIELDS = {"rank", "age", "req", "mb"};
 	
 	private JsonObject json;
 	private Sql2o sql2o;
@@ -24,6 +29,8 @@ public class ScoutMapper extends UserMapper {
 	private int rankID;
 	private int troopID;
 	private int age;
+	private String[] req;
+	private String[] mb;
 	
 	/**
 	 * Constructs ScoutMapper which can validate and map Json data to Scout objects
@@ -82,12 +89,43 @@ public class ScoutMapper extends UserMapper {
 			//Check that age is a valid integer inside the scout age range
 			this.age = json.get("age").getAsInt();
 			validateAge(age);
+			
+			//Parse JsonArrays
+			JsonArray jsonReq = json.get("req").getAsJsonArray();
+			this.req = validateReq(jsonReq);
+			
+			JsonArray jsonMb = json.get("mb").getAsJsonArray();
+			this.req = validateMb(jsonMb);
 		}
 		catch (ClassCastException | NoRecordFoundException e){
 			throw new InvalidJsonDataException();
 		}
 		
 		this.validated = true;
+	}
+	
+	public String[] validateReq(JsonArray jsonReq) throws InvalidJsonDataException {
+		if (jsonReq.size() > MAX_REQ_NUMBER) throw new InvalidJsonDataException();
+		
+		String[] req = new String[jsonReq.size()];
+		for(int i = 0; i < req.length; i++) {		
+			String requirement = jsonReq.get(i).getAsString();
+			if (requirement == null || requirement.length() > MAX_REQ_LENGTH) throw new InvalidJsonDataException();
+			req[i] = requirement;
+		}
+		return req;
+	}
+	
+	public String[] validateMb(JsonArray jsonMb) throws InvalidJsonDataException {
+		if(jsonMb.size() > MAX_MB_NUMBER) throw new InvalidJsonDataException();
+		
+		String[] mb = new String[jsonReq.size()];
+		for(int i = 0; i < req.length; i++) {
+			String meritbadge = json.get(i).getAsString();
+			if (meritbadge == null || meritbadge.length() > MAX_MB_LENGTH) throw new InvalidJsonDataException();
+			mb[i] = meritbadge;
+		}
+		return mb;
 	}
 	
 	public String validateName(String name) throws InvalidJsonDataException {
@@ -114,7 +152,7 @@ public class ScoutMapper extends UserMapper {
 	 */
 	public Scout getScout() throws ScoutTrackNotValidatedException {
 		if(!validated) throw new ScoutTrackNotValidatedException("Scout");
-		return new Scout(this.sql2o, this.name, this.email, this.pwd, this.rankID, this.age, this.troopID);
+		return new Scout(this.sql2o, this.name, this.email, this.pwd, this.rankID, this.age, this.troopID, this.req, this.mb);
 	}
 	
 	/**
