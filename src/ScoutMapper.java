@@ -96,8 +96,8 @@ public class ScoutMapper extends UserMapper {
 			validateAge(age);
 			
 			//Parse JsonArrays
-			JsonArray jsonReq = json.get("req").getAsJsonArray();
-			validateRequirements(lookup, jsonReq, this.rankID);
+			JsonArray jsonReqArray = json.get("req").getAsJsonArray();
+			validateRequirements(lookup, jsonReqArray);
 			
 			JsonArray jsonMb = json.get("mb").getAsJsonArray();
 			validateMeritbadges(jsonMb);
@@ -117,16 +117,18 @@ public class ScoutMapper extends UserMapper {
 	 * @throws Sql2oException
 	 * @throws NoRecordFoundException
 	 */
-	public int[] validateRequirements(DatabaseSearcher lookup, JsonArray jsonReqArray, int rankid) throws InvalidJsonDataException, Sql2oException, NoRecordFoundException {
-		if (jsonReqArray.size() > MAX_REQ_NUMBER) throw new InvalidJsonDataException();		
-		reqID = new int[jsonReqArray.size()];
-		for (int i = 0; i < reqID.length; i++) {
-			JsonObject jsonReq = jsonReqArray.get(i).getAsJsonObject();
-			String reqName = jsonReq.get("name").getAsString();
-			int rankID = lookup.idOfRank(jsonReq.get("rank").getAsString());
-			reqID[i] = validateRequirement(lookup, reqName, rankID);
+	public int[] validateRequirements(DatabaseSearcher lookup, JsonArray jsonReqArray) throws InvalidJsonDataException, Sql2oException, NoRecordFoundException {
+		//Check number of partial requirements is valid
+		if (jsonReqArray.size() > MAX_REQ_NUMBER) throw new InvalidJsonDataException();		//Check number of partial requirements is valid
+		reqID = new int[jsonReqArray.size()];												//Construct array to hold requirement ids
+		for (int i = 0; i < reqID.length; i++) {											//For each requirement in the array
+			JsonObject jsonReq = jsonReqArray.get(i).getAsJsonObject();						//Get requirement json object
+			String reqName = jsonReq.get("name").getAsString();								//Get requirement name
+			int reqRankID = lookup.idOfRank(jsonReq.get("rank").getAsString());				//Get requirement rank (Separate lookup)
+			if (reqRankID <= this.rankID) throw new InvalidJsonDataException();				//if requirement is for rank lower than the scout's current rank, throw an exception
+			reqID[i] = validateRequirement(lookup, reqName, reqRankID);						//validate requirement and add it to the array
 		}
-		return reqID;
+		return reqID; 
 	}
 	
 	/**
@@ -137,9 +139,9 @@ public class ScoutMapper extends UserMapper {
 	 * @throws Sql2oException thrown by database error
 	 * @throws NoRecordFoundException thrown if no requirement with that name is found in database
 	 */
-	public int validateRequirement(DatabaseSearcher lookup, String req, int rankID) throws InvalidJsonDataException, Sql2oException, NoRecordFoundException { 
+	public int validateRequirement(DatabaseSearcher lookup, String req, int reqRankID) throws InvalidJsonDataException, Sql2oException, NoRecordFoundException { 
 		if( req == null || req.length() > MAX_REQ_LENGTH) throw new InvalidJsonDataException();
-		return lookup.idOfRequirement(req, rankID);
+		return lookup.idOfRequirement(req, reqRankID);
 	}
 	
 	/**

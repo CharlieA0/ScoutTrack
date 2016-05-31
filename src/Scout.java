@@ -47,6 +47,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 */
 	public void destroy() {
 		super.deleteFrom(DatabaseNames.SCOUT_TABLE, id);
+		super.deleteWhere(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", id);
+		super.deleteWhere(DatabaseNames.SCOUT_MB_TABLE, "scoutid", id);
 	}
 	
 	/**
@@ -210,7 +212,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 */
 	private void addReq(int[] reqID) throws Sql2oException, InvalidDatabaseOperation {
 		int[] scoutID = new int[reqID.length];
-		for(int i = 0; i < scoutID.length; i++) scoutID[i] = id;
+		for(int i = 0; i < scoutID.length; i++) scoutID[i] = id;	//This is ugly, there must be a better way to do this.
 		super.addJoinRecords(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", "reqid", scoutID, reqID);
 	}
 	
@@ -222,7 +224,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 */
 	private void addMB(int[] mbID) throws Sql2oException, InvalidDatabaseOperation {
 		int[] scoutID = new int[mbID.length];
-		for(int i = 0; i < scoutID.length; i++) scoutID[i] = id;
+		for(int i = 0; i < scoutID.length; i++) scoutID[i] = id;	//This is ugly, there must be a better way to do this.
 		super.addJoinRecords(DatabaseNames.SCOUT_MB_TABLE, "scoutid", "meritbadgeid", scoutID, mbID);
 	}
 	

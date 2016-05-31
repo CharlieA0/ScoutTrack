@@ -215,6 +215,23 @@ public class DatabaseSearcher {
 	}
 	
 	/**
+	 * Deletes records from database where column equals value
+	 * @param table database table
+	 * @param column column in the table
+	 * @param value value of the column where the records should be deleted
+	 */
+	public void deleteWhere(String table, String column, int value) {
+		String sql = "DELETE FROM " + table + " WHERE " + column + " = :value";
+		try (Connection conn = sql2o.beginTransaction()) {
+			conn.createQuery(sql).addParameter("value", value).executeUpdate();
+			conn.commit();
+		} catch (Sql2oException e) {
+			System.out.println(e);
+			throw e;
+		}
+	}
+	
+	/**
 	 * Retrieves id of record with rank name
 	 * @param rankName name of rank
 	 * @return id of record
