@@ -38,6 +38,14 @@ public class DatabaseSearcher {
 		}
 	}
 	
+	public List <Strings> queryStrings(String table, String column, List <Integer> ids) {
+		String sql = "SELECT " + column + " FROM " + table + " WHERE id IN (";
+		for (int i = 0; i < ids.size() - 1; i++) {
+			sql += "value" + i + ", ";
+		}
+		sql += ids.get(ids.size() - 1) + ")";
+	}
+	
 	/**
 	 * Retrieves list of strings from database where a column equals value
 	 * @param table database table
@@ -54,6 +62,48 @@ public class DatabaseSearcher {
 		List <String> response = conn.createQuery(sql).addParameter("value", hasValue).executeAndFetch(String.class);
 		if(response == null) throw new NoRecordFoundException();
 		return response;
+	}
+	
+	public List<String> fetchStringsWhere(String table, String checkColumn, int hasValue, String retrieveColumn) throws Sql2oException, NoRecordFoundException {
+		String sql = "SELECT " + retrieveColumn +" FROM " + table + " WHERE " + checkColumn + " = :value";
+		Connection conn = sql2o.open();
+		List <String> response = conn.createQuery(sql).addParameter("value", hasValue).executeAndFetch(String.class);
+		if(response == null) throw new NoRecordFoundException();
+		return response;
+	}
+	
+	/**
+	 * Retrieves list of ints from database where a column equals value
+	 * @param table database table
+	 * @param checkColumn column to compare to value
+	 * @param hasValue value column must have to retrieve
+	 * @param retrieveColumn the column to retrieve when checkColumn has hasValue
+	 * @return List of strings from retrieveColumn where checkColumn has hasValue
+	 * @throws Sql2oException thrown if database error
+	 * @throws NoRecordFoundException thrown if no matching records are found
+	 */
+	public List<Integer> fetchIntsWhere(String table, String checkColumn, String hasValue, String retrieveColumn) throws Sql2oException, NoRecordFoundException {
+		String sql = "SELECT " + retrieveColumn +" FROM " + table + " WHERE " + checkColumn + " = :value";
+		Connection conn = sql2o.open();
+		List <String> response = conn.createQuery(sql).addParameter("value", hasValue).executeAndFetch(String.class);
+		
+		if(response == null) throw new NoRecordFoundException();
+		
+		List <Integer> ints = new ArrayList<Integer>();
+		for(String str : response) ints.add(Integer.parseInt(str));
+		return ints;
+	}
+	
+	public List<Integer> fetchIntsWhere(String table, String checkColumn, int hasValue, String retrieveColumn) throws Sql2oException, NoRecordFoundException {
+		String sql = "SELECT " + retrieveColumn +" FROM " + table + " WHERE " + checkColumn + " = :value";
+		Connection conn = sql2o.open();
+		List <String> response = conn.createQuery(sql).addParameter("value", hasValue).executeAndFetch(String.class);
+		
+		if(response == null) throw new NoRecordFoundException();
+		
+		List <Integer> ints = new ArrayList<Integer>();
+		for(String str : response) ints.add(Integer.parseInt(str));
+		return ints;
 	}
 	
 	/**

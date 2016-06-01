@@ -3,6 +3,7 @@ import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
 import java.security.SecureRandom;
+import java.util.List;
 
 
 public class Scout extends DatabaseSearcher implements DatabaseObject, User{
@@ -188,7 +189,12 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	public String querySalt() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.SCOUT_TABLE, "salt", id);
 	}
-		
+
+	public List <String> queryMb() throws Sql2oException, NoRecordFoundException {
+		List <Integer> meritbadgeIDs = super.fetchIntsWhere(DatabaseNames.SCOUT_MB_TABLE, "scoutid", id, "meritbadgeid"); 
+		return super.fetchStringsWhere(DatabaseNames.MB_TABLE, "id", hasValue, retrieveColumn)
+	}
+	
 	/**
 	 * Adds scout to database
 	 * @param name scout's name
