@@ -38,12 +38,28 @@ public class DatabaseSearcher {
 		}
 	}
 	
-	public List <Strings> queryStrings(String table, String column, List <Integer> ids) {
+	/**
+	 * Retrieves Strings of all ids
+	 * @param table database table
+	 * @param column column to retrieve
+	 * @param ids ids of records to return
+	 * @return List of strings from column in records where ids match passed list
+	 * @throws NoRecordFoundException
+	 */
+	public List <String> queryStrings(String table, String column, List <Integer> ids) throws NoRecordFoundException {
+		//Prepare sql
 		String sql = "SELECT " + column + " FROM " + table + " WHERE id IN (";
 		for (int i = 0; i < ids.size() - 1; i++) {
 			sql += "value" + i + ", ";
 		}
-		sql += ids.get(ids.size() - 1) + ")";
+		sql += "value" + (ids.size() - 1) + ")";
+		
+		//Add parameters and execute
+		Query q = sql2o.open().createQuery(sql);
+		for(int i = 0; i < ids.size(); i++) q.addParameter("value" + i, ids.get(i));
+		List <String> response = q.executeAndFetch(String.class);
+		if (response == null) throw new NoRecordFoundException();
+		return response;
 	}
 	
 	/**
@@ -198,6 +214,13 @@ public class DatabaseSearcher {
 			System.out.println(e);
 			throw e;
 		}			
+	}
+	
+	public void addJoinRecord(String table, String firstColumn, String secondColumn, int firstID, int secondID) throws Sql2oException {
+		String sql = "INSERT INTO " + table + " (" + firstColumn + ", " + secondColumn + ") VALUES (:firstID, :secondID)";
+		Connection conn = sql2o.beginTransaction();
+		conn.createQuery(sql).addParameter("firstID", firstID).addParameter("secondID", secondID).executeUpdate();
+		conn.commit();
 	}
 	
 	/**

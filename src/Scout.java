@@ -28,8 +28,9 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 		super(sql2o);
 		this.sql2o = sql2o;
 		this.id = addScout(name, email, pwd, rankID, age, troopID);
-		addReq(reqID);
-		addMB(mbID);
+		
+		this.addReqList(reqID);
+		this.addMBList(mbID);
 	}
 	
 	/**
@@ -189,10 +190,64 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	public String querySalt() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.SCOUT_TABLE, "salt", id);
 	}
+	
+	/**
+	 * Get a list of partial requirements the scout has completed
+	 * @return
+	 * @throws Sql2oException
+	 * @throws NoRecordFoundException
+	 */
+	public List <String> queryReq() throws Sql2oException, NoRecordFoundException {
+		List <Integer> reqIDs = super.fetchIntsWhere(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", id, "meritbadgeid");
+		return super.queryStrings(DatabaseNames.REQ_TABLE, "name", reqIDs);
+	}
+	
+	/**
+	 * Adds a partial requirement to scout in database
+	 * @param reqName name of the partial requirement
+	 * @throws Sql2oException thrown by database error
+	 * @throws NoRecordFoundException thrown if name of requirement is not found
+	 */
+	public void addReq(String reqName) throws Sql2oException, NoRecordFoundException {
+		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
+		int meritbadgeID = lookup.idOfMeritbadge(reqName);
+		super.addJoinRecord(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", "reqid", id, meritbadgeID);
+	}
 
+	/**
+	 * Get List of Merit Badges
+	 * @return List of Merit Badge Names
+	 * @throws Sql2oException
+	 * @throws NoRecordFoundException
+	 */
 	public List <String> queryMb() throws Sql2oException, NoRecordFoundException {
 		List <Integer> meritbadgeIDs = super.fetchIntsWhere(DatabaseNames.SCOUT_MB_TABLE, "scoutid", id, "meritbadgeid"); 
-		return super.fetchStringsWhere(DatabaseNames.MB_TABLE, "id", hasValue, retrieveColumn)
+		return super.queryStrings(DatabaseNames.MB_TABLE, "name", meritbadgeIDs);
+	}
+	
+	/**
+	 * Add Merit Badge to scout in database
+	 * @param meritbadgeName name of the meritbadge to add to the scout
+	 * @throws NoRecordFoundException thrown if no meritbadge of that name is found
+	 * @throws Sql2oException thrown by database error
+	 */
+	
+	public void addMb(String meritbadgeName) throws Sql2oException, NoRecordFoundException {
+		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
+		int meritbadgeID = lookup.idOfMeritbadge(meritbadgeName);
+		super.addJoinRecord(DatabaseNames.SCOUT_MB_TABLE, "scoutid", "meritbadgeid", id, meritbadgeID);
+	}
+	
+	/**
+	 * Removes Merit Badge from database 
+	 * @param meritbadgeName name of the meritbadge to remove
+	 * @throws Sql2oException thrown if database error occurs
+	 * @throws NoRecordFoundException thrown if name of merit badge is not found
+	 */
+	public void destroyMb(String meritbadgeName) throws Sql2oException, NoRecordFoundException {
+		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
+		int meritbadgeID = lookup.idOfMeritbadge(meritbadgeName);
+		super.deleteWhere(DatabaseNames.SCOUT_MB_TABLE, "meritbadgeid", meritbadgeID);
 	}
 	
 	/**
@@ -216,7 +271,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException thrown on database error
 	 * @throws InvalidDatabaseOperation thrown if invalid operation is performed on database
 	 */
-	private void addReq(int[] reqID) throws Sql2oException, InvalidDatabaseOperation {
+	private void addReqList(int[] reqID) throws Sql2oException, InvalidDatabaseOperation {
 		int[] scoutID = new int[reqID.length];
 		for(int i = 0; i < scoutID.length; i++) scoutID[i] = id;	//This is ugly, there must be a better way to do this.
 		super.addJoinRecords(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", "reqid", scoutID, reqID);
@@ -228,7 +283,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException thrown if database error
 	 * @throws InvalidDatabaseOperation thrown if invalid operation is performed on database
 	 */
-	private void addMB(int[] mbID) throws Sql2oException, InvalidDatabaseOperation {
+	private void addMBList(int[] mbID) throws Sql2oException, InvalidDatabaseOperation {
 		int[] scoutID = new int[mbID.length];
 		for(int i = 0; i < scoutID.length; i++) scoutID[i] = id;	//This is ugly, there must be a better way to do this.
 		super.addJoinRecords(DatabaseNames.SCOUT_MB_TABLE, "scoutid", "meritbadgeid", scoutID, mbID);

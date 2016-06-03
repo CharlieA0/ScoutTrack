@@ -2,15 +2,23 @@ import static spark.Spark.get;
 import static spark.Spark.post;
 import static spark.Spark.put;
 
-import java.util.jar.JarException;
-
 import static spark.Spark.delete;
+
+
+import java.util.List;
+
+
 import spark.Response;
+
+
 
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
+
+import com.google.gson.reflect.TypeToken;
 
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
@@ -181,19 +189,68 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Get user partial requirements
-            get("/scout/:id/req",  (request, response) -> {
+            //Update scout list of meritbadges
+            post("/scout/:id/mb", (request, response) -> {
             	return "Not Implemented";
             });
             
+            //Get scout's meritbadges
+            get("/scout/:id/mb", (request, response) -> {
+            	try {
+            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		return new Gson().toJson(scout.queryMb());
+            	} catch (Exception e) {
+            		return handle(response, e);
+            	}
+            });
+            
+            
+            //Add scout meritbadge
+            put("/scout/:id/mb/:meritbadgeName", (request, response) -> { 
+            	try {
+            		Scout scout = new Scout(Integer.parseInt(request.params("meritbadgeName")), sql2o);
+            		scout.addMb(request.params("meritbadgeName"));
+            		return"";
+            	} catch (Exception e) {
+            		return handle(response, e);
+            	}
+            });
+            
+            //Remove a scout's meritbadge
+            delete("/scout/:id/mb/:meritbadgeName", (request, response) -> {
+            	try {
+            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		scout.destroyMb(request.params("meritbadgeName"));
+            		return "";
+            	} catch (Exception e) {
+            		return handle(response, e);
+            	}
+            });
+
             //Update scout partial requirements
             post("/scout/:id/req", (request, response) -> {
             	return "Not Implemented";
             });
             
+            //Get user partial requirements
+            get("/scout/:id/req",  (request, response) -> {
+            	try {
+            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		return scout.queryReq();
+            	} catch (Exception e) {
+            		return handle(response, e);
+            	}
+            });
+            
             //Add scout requirement
-            put("/scout/:id/req/add", (request, response) -> {
-            	return "Not Implemented";
+            put("/scout/:id/req/:reqName", (request, response) -> {
+            	try {
+            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		scout.addReq(request.params("reqName"));
+            		return "";
+            	} catch (Exception e) {
+            		return handle(response, e);
+            	}
             });
             
             //Remove scout requirement
