@@ -48,16 +48,14 @@ public class DatabaseSearcher {
 	 */
 	public List <String> queryStrings(String table, String column, List <Integer> ids) throws NoRecordFoundException {
 		//Prepare sql
-		String sql = "SELECT " + column + " FROM " + table + " WHERE id IN (";
-		for (int i = 0; i < ids.size() - 1; i++) {
-			sql += "value" + i + ", ";
-		}
-		sql += "value" + (ids.size() - 1) + ")";
-		
+		String sql = "SELECT " + column + " FROM " + table + " WHERE id IN ";
+		sql = addCollection(sql, ids.size());
+			
 		//Add parameters and execute
 		Query q = sql2o.open().createQuery(sql);
-		for(int i = 0; i < ids.size(); i++) q.addParameter("value" + i, ids.get(i));
+		q = addParameters(q, ids);
 		List <String> response = q.executeAndFetch(String.class);
+		
 		if (response == null) throw new NoRecordFoundException();
 		return response;
 	}
@@ -372,5 +370,19 @@ public class DatabaseSearcher {
 	 */
 	public int idOfMeritbadge(String mbName) throws Sql2oException, NoRecordFoundException {
 		return searchId(DatabaseNames.MB_TABLE, "name", mbName);
+	}
+	
+	public String addCollection(String sql, int size) {
+		sql += "(";
+		for (int i = 0; i < size - 1; i++) {
+			sql += ":value" + i + ", ";
+		}
+		sql += ":value" + (size - 1) + ")";
+		return sql;
+	}
+	
+	public Query addParameters(Query q, List<Integer> param) {
+		for(int i = 0; i < param.size(); i++) q.addParameter("value" + i, param.get(i));
+		return q;
 	}
 }

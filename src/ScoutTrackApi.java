@@ -236,17 +236,18 @@ public class ScoutTrackApi {
             get("/scout/:id/req",  (request, response) -> {
             	try {
             		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		return scout.queryReq();
+            		List<RequirementObject> reqs =  scout.queryReq();
+            		return new Gson().toJson(reqs);
             	} catch (Exception e) {
             		return handle(response, e);
             	}
             });
             
             //Add scout requirement
-            put("/scout/:id/req/:reqName", (request, response) -> {
+            put("/scout/:id/req", (request, response) -> {
             	try {
             		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		scout.addReq(request.params("reqName"));
+            		scout.addReq(request.queryParams("name"), request.queryParams("rank"));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -254,8 +255,15 @@ public class ScoutTrackApi {
             });
             
             //Remove scout requirement
-            delete("/scout/:id/req/destroy", (request, response) -> {
-            	return "Not Implemented";
+            delete("/scout/:id/req", (request, response) -> {
+            	try {
+            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		System.out.println(request.queryParams());
+            		scout.destroyReq(request.queryParams("name"), request.queryParams("rank"));
+            		return "";
+            	} catch (Exception e) {
+            		return handle(response, e);
+            	}
             });
             
             //Get scout name
@@ -517,11 +525,12 @@ public class ScoutTrackApi {
         private static String handle(Response response, Exception e) {
        		 if (e instanceof NoRecordFoundException) {
        			 response.status(HTTP_BAD_REQUEST);
+       			 e.printStackTrace();
        			 return "Request Data Invalid, No Record Found";
        		 }
        		 else if (e instanceof JsonSyntaxException || e instanceof InvalidJsonDataException || e instanceof NumberFormatException) {
        			response.status(HTTP_BAD_REQUEST);
-       			return "Could Not Parse Request";
+       			return "Could Not Parse Request. Request Invalid.";
        		 }
        		 else if(e instanceof Sql2oException) {
        			 e.printStackTrace();

@@ -1,8 +1,15 @@
 import org.sql2o.Connection;
+import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -192,15 +199,34 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	}
 	
 	/**
-	 * Get a list of partial requirements the scout has completed
+	 * Get a list of partial requirements the scout has completed (Json String)
 	 * @return
 	 * @throws Sql2oException
 	 * @throws NoRecordFoundException
 	 */
-	public List <String> queryReq() throws Sql2oException, NoRecordFoundException {
-		List <Integer> reqIDs = super.fetchIntsWhere(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", id, "meritbadgeid");
-		return super.queryStrings(DatabaseNames.REQ_TABLE, "name", reqIDs);
-	}
+	public List<RequirementObject> queryReq() throws Sql2oException, NoRecordFoundException {
+		//Get reqIDs
+		List <Integer> reqIDs = super.fetchIntsWhere(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", id, "reqid");
+		
+		//Get req records (name and rank id) from database using reqIDs
+		String sql = "SELECT name, rankid FROM " + DatabaseNames.REQ_TABLE + " WHERE id IN ";
+		sql = super.addCollection(sql, reqIDs.size());
+		Query q = sql2o.open().createQuery(sql);
+		q = super.addParameters(q, reqIDs);
+		List <RequirementRecord> records = q.executeAndFetch(RequirementRecord.class);
+		
+		//Get Rank Names
+		List <Integer> rankIDs = new ArrayList <Integer>();
+		for(RequirementRecord record : records) rankIDs.add(record.getRankID());
+		List <String> rankNames = super.queryStrings(DatabaseNames.RANK_TABLE, "name", rankIDs);
+		rankNames = regularize(rankNames, rankIDs);
+		
+		//Transform to Requirement objects
+		List <RequirementObject> req = new ArrayList<RequirementObject>();
+		for(int i = 0; i < records.size(); i++) req.add(new RequirementObject(records.get(i).getName(), rankNames.get(i)));
+		
+		return req;
+		}
 	
 	/**
 	 * Adds a partial requirement to scout in database
@@ -208,10 +234,24 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws Sql2oException thrown by database error
 	 * @throws NoRecordFoundException thrown if name of requirement is not found
 	 */
-	public void addReq(String reqName) throws Sql2oException, NoRecordFoundException {
-		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
-		int meritbadgeID = lookup.idOfMeritbadge(reqName);
-		super.addJoinRecord(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", "reqid", id, meritbadgeID);
+	public void addReq(String reqName, String rank) throws Sql2oException, NoRecordFoundException {
+		int rankID = super.idOfRank(rank);
+		int reqID = super.idOfRequirement(reqName, rankID);
+		super.addJoinRecord(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", "reqid", id, reqID);
+	}
+	
+	/**
+	 * Remove a partial requirement from scout in the database
+	 * @param reqName name of the requirement
+	 * @param rank name of the rank
+	 * @throws Sql2oException thrown if database error
+	 * @throws NoRecordFoundException thrown if no record of rank name or requirement name is found
+	 */
+	public void destroyReq(String reqName, String rank) throws Sql2oException, NoRecordFoundException {
+		System.out.println(rank);
+		int rankID = super.idOfRank(rank);
+		int reqID = super.idOfRequirement(reqName, rankID);
+		super.deleteWhere(DatabaseNames.SCOUT_REQ_TABLE, "reqid", reqID);
 	}
 
 	/**
@@ -233,8 +273,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 */
 	
 	public void addMb(String meritbadgeName) throws Sql2oException, NoRecordFoundException {
-		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
-		int meritbadgeID = lookup.idOfMeritbadge(meritbadgeName);
+		int meritbadgeID = super.idOfMeritbadge(meritbadgeName);
 		super.addJoinRecord(DatabaseNames.SCOUT_MB_TABLE, "scoutid", "meritbadgeid", id, meritbadgeID);
 	}
 	
@@ -245,8 +284,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws NoRecordFoundException thrown if name of merit badge is not found
 	 */
 	public void destroyMb(String meritbadgeName) throws Sql2oException, NoRecordFoundException {
-		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
-		int meritbadgeID = lookup.idOfMeritbadge(meritbadgeName);
+		int meritbadgeID = super.idOfMeritbadge(meritbadgeName);
 		super.deleteWhere(DatabaseNames.SCOUT_MB_TABLE, "meritbadgeid", meritbadgeID);
 	}
 	
@@ -331,5 +369,24 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 			System.out.println(e);
 			throw e;
 		}
+	}
+	
+	/**
+	 * Regularlize the entries of a list by inserting copies so that its order matches another's
+	 * @param values list to be regularized
+	 * @param order order values should be in (including repetitions)
+	 * @return the regularized list;
+	 */
+	private List<String> regularize(List <String> values, List <Integer> order) {
+		int entry = 0;
+		List <String> regularizedList = new ArrayList<String>();
+		
+		for(int i = 0; i < order.size() - 1; i++) {
+			regularizedList.add(values.get(entry));
+			if(order.get(i) != order.get(i+1)) entry++;
+		}
+		regularizedList.add(values.get(entry));
+		
+		return regularizedList;
 	}
 }
