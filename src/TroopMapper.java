@@ -7,11 +7,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class TroopMapper extends DatabaseObjectMapper {
-	private final int MAX_SCOUTS = 500;
 	private final int TROOP_NAME_LENGTH = 30;
 	
 	private final List <String> FIELDS;
-	private final String[] TROOP_FIELDS = {/*"scoutIDs"*/};
+	private final String[] TROOP_FIELDS = {};
 	
 	private final JsonObject json;
 	private final Sql2o sql2o;
@@ -55,17 +54,7 @@ public class TroopMapper extends DatabaseObjectMapper {
 		
 		this.name = json.get("name").getAsString();
 		validateName(name);
-		
-		/* Neccessary
-		JsonArray scouts = json.get("scoutIDs").getAsJsonArray();
-		try {
-			this.scoutIDs = checkScouts(scouts);
-			if (scoutIDs.length > MAX_SCOUTS) throw new InvalidJsonDataException();
-		} 
-		catch(ClassCastException e) {
-			throw new InvalidJsonDataException();		
-		}*/
-		
+
 		this.validated = true;
 	}
 	
@@ -92,20 +81,4 @@ public class TroopMapper extends DatabaseObjectMapper {
 		fields.addAll(Arrays.asList(TROOP_FIELDS));
 		return fields;
 	}
-	
-	/* Necessary?
-	/**
-	 * Checks that JsonArray has valid integers (This doesn't check that ids are valid. Invalid ids should be ignored during Troop construction.)
-	 * @param scouts the list of scout ids
-	 * @return a list of scout ids
-	 *//*
-	private int[] checkScouts(JsonArray scouts) {
-		int[] tmp = new int[scouts.size()];
-		for(int i = 0; i < scouts.size(); i++) {
-			tmp[i] = scouts.get(i).getAsInt();		
-		}		
-		return tmp;
-	}*/
-	
-
 }

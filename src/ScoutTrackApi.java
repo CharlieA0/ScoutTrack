@@ -25,12 +25,15 @@ import org.sql2o.Sql2oException;
 
 
 public class ScoutTrackApi {
+	private static final byte[] SECRET_KEY = KeyFunctions.generateSHA256();
 	private static final String DB_NAME = "scouttrack";
 	private static final String DB_USERNAME = "Charlie";
 	private static final String DB_PASSWORD = "Conway";
 	
 	private static final int HTTP_BAD_REQUEST = 400;
 	private static final int HTTP_INTERNAL_ERROR = 500;
+	
+	private static TokenManager tokenManager = new TokenManager(SECRET_KEY);
 	
     public static void main(String[] args){
     		
@@ -58,9 +61,7 @@ public class ScoutTrackApi {
             		return handle(response, e);
             	}
             });
-            
-           
-            
+
             //Remove scout
             delete("/scout/:id/destroy", (request, response) -> {
             	try {
@@ -100,6 +101,8 @@ public class ScoutTrackApi {
             	}
             });
             
+            /* SCOUTS */
+            
             //Get all scout info
             get("/scout/:id/info",  (request, response) -> {
             	return "Not Implemented";
@@ -137,16 +140,6 @@ public class ScoutTrackApi {
             	}
 			});
 			
-			/*Get scout salt - Not Necessary: Client -> Hash Plaintext -> https -> Server add Salt and Hash Again
-			get("/scout/:id/salt", (request, response) -> {
-				try {
-					Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-					return scout.querySalt();
-				} catch (Exception e) {
-            		return handle(response, e);
-            	}
-			});*/
-            
             //Get user troop
             get("/scout/:id/troop",  (request, response) -> {
             	try {
@@ -202,8 +195,7 @@ public class ScoutTrackApi {
             	} catch (Exception e) {
             		return handle(response, e);
             	}
-            });
-            
+            });       
             
             //Add scout meritbadge
             put("/scout/:id/mb/:meritbadgeName", (request, response) -> { 
@@ -307,6 +299,8 @@ public class ScoutTrackApi {
             		return handle(response, e);
             	}
             });
+            
+            /* LEADERS */
 
             //Get leader info
             get("/leader/:id/info",  (request, response) -> {
@@ -375,18 +369,7 @@ public class ScoutTrackApi {
             		return handle(response, e);
             	}
             });
-            
-			/*//Get leader password salt - Not Necessary: Client -> Hash Plaintext -> https -> Server add Salt and Hash Again
-			get("/leader/:id/salt", (request, response) -> {
-               	try {
-               		Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
-               		return leader.querySalt();
-               	} catch (Exception e) {
-            		return handle(response, e);
-            	}
-			});*/
-
-            
+             
 			//Update leader password hash
 			put("/leader/:id/pwd/:pwd", (request, response) -> {
 				try {
@@ -397,8 +380,6 @@ public class ScoutTrackApi {
             		return handle(response, e);
             	}
 			});
-
-
 
             /* TROOP API */
             
@@ -505,9 +486,13 @@ public class ScoutTrackApi {
            	
     		/* TOKEN API */
     		
-            /*//get Token ?Need database of Tokens?
+            //get Token ?Need database of Tokens?
             get("/token/new", (request, response)-> {
-                return "Not Implemented";
+                try {
+                	return tokenManager.getToken(request.queryParams("name"), request.queryParams("pwd"), request.queryParams("type");
+                } catch (Exception e) {
+                	return handleLogin(response, e);
+                }
             });
             
             //renew token
@@ -518,7 +503,7 @@ public class ScoutTrackApi {
             //destroy token
             delete("/token/destroy", (request, response) -> {
             	return "Not Implemented";
-            });*/
+            });
             
         }
             
@@ -542,4 +527,8 @@ public class ScoutTrackApi {
        		 response.status(HTTP_INTERNAL_ERROR);
        		 return "Internal Error";
        	 }
+        
+        private static String handleLogin(Response response, Exception e) {
+        	return handle(response,e);
+        }
     }
