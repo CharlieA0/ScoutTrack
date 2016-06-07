@@ -372,6 +372,12 @@ public class DatabaseSearcher {
 		return searchId(DatabaseNames.MB_TABLE, "name", mbName);
 	}
 	
+	/**
+	 * Adds a collection to an sql statement (Meant to be used with addParameters method)
+	 * @param sql sql statement
+	 * @param size size of the collection
+	 * @return sql statement with added collection
+	 */
 	public String addCollection(String sql, int size) {
 		sql += "(";
 		for (int i = 0; i < size - 1; i++) {
@@ -381,6 +387,12 @@ public class DatabaseSearcher {
 		return sql;
 	}
 	
+	/**
+	 * Adds list of parameters to sql query
+	 * @param q query to add parameters to
+	 * @param param parameters to add
+	 * @return query with passed parameters
+	 */
 	public Query addParameters(Query q, List<Integer> param) {
 		for(int i = 0; i < param.size(); i++) q.addParameter("value" + i, param.get(i));
 		return q;
