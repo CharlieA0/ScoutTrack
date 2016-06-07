@@ -3,7 +3,6 @@ import java.util.List;
 
 import org.sql2o.Sql2o;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class TroopMapper extends DatabaseObjectMapper {

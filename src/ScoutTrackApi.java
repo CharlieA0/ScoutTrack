@@ -4,21 +4,15 @@ import static spark.Spark.put;
 
 import static spark.Spark.delete;
 
-
 import java.util.List;
-
 
 import spark.Response;
 
-
-
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.nimbusds.jose.JOSEException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
-
-import com.google.gson.reflect.TypeToken;
 
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
@@ -31,18 +25,18 @@ public class ScoutTrackApi {
 	private static final String DB_PASSWORD = "Conway";
 	
 	private static final int HTTP_BAD_REQUEST = 400;
+	private static final int HTTP_ACCESS_DENIED = 403;
 	private static final int HTTP_INTERNAL_ERROR = 500;
-	
-	private static TokenManager tokenManager = new TokenManager(SECRET_KEY);
 	
     public static void main(String[] args){
     		
     		Sql2o sql2o = new Sql2o("jdbc:postgresql://localhost:5432/" + DB_NAME, DB_USERNAME, DB_PASSWORD);
+    		TokenManager tokenManager = new TokenManager(sql2o, SECRET_KEY);
          
             /* USER API */
             
             //Create new scout
-            post("/scout/new", (request, response) -> {
+            post("/scout", (request, response) -> {
             	try {
             		JsonObject json;
             	
@@ -63,9 +57,10 @@ public class ScoutTrackApi {
             });
 
             //Remove scout
-            delete("/scout/:id/destroy", (request, response) -> {
+            delete("/scout", (request, response) -> {
             	try {
-	            	Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
 	            	scout.destroy();
 	            	return "";
             	} catch (Exception e) {
@@ -74,7 +69,7 @@ public class ScoutTrackApi {
             });
             
             //Create new leader
-            post("/leader/new", (request, response) -> {
+            post("/leader", (request, response) -> {
             	try {
             		JsonObject json;       
             		json = new JsonParser().parse(request.body()).getAsJsonObject();
@@ -91,9 +86,10 @@ public class ScoutTrackApi {
             });
             
             //Remove leader
-            delete("/leader/:id/destroy", (request, response) -> {
+            delete("/leader", (request, response) -> {
             	try {
-            		Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
+            		Leader leader = new Leader(id, sql2o);
             		leader.destroy();
             		return "";
             	} catch (Exception e) {
@@ -111,18 +107,20 @@ public class ScoutTrackApi {
             //Get scout email
             get("/scout/:id/email",  (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		return scout.queryEmail();
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);	            	
+	            	return scout.queryEmail();
             	} catch (Exception e) {
             		return handle(response, e);
             	}
             });
             
             //Update scout email
-            put("/scout/:id/email/:email", (request, response) -> {
+            put("/scout/:id/email", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		scout.updateEmail(new ScoutMapper(sql2o).validateEmail(request.params("email")));
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
+            		scout.updateEmail(new ScoutMapper(sql2o).validateEmail(request.queryParams("email")));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -130,10 +128,11 @@ public class ScoutTrackApi {
             });
 			
 			//Update scout password hash
-			put("/scout/:id/pwd/:pwd", (request, response) -> {
+			put("/scout/:id/pwd", (request, response) -> {
                	try {
-               		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-               		scout.updatePwd(new ScoutMapper(sql2o).validatePwd(request.params("pwd")));
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
+               		scout.updatePwd(new ScoutMapper(sql2o).validatePwd(request.queryParams("pwd")));
                		return "";
                	} catch (Exception e) {
             		return handle(response, e);
@@ -143,7 +142,8 @@ public class ScoutTrackApi {
             //Get user troop
             get("/scout/:id/troop",  (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
             		return scout.queryTroop();
             	} catch (Exception e) {
             		return handle(response, e);
@@ -151,10 +151,11 @@ public class ScoutTrackApi {
             });
             
             //Update scout troop
-            put("/scout/:id/troop/:troop", (request, response) -> {
+            put("/scout/:id/troop", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		scout.updateTroop(request.params("troop"));
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
+            		scout.updateTroop(request.queryParams("troop"));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -164,7 +165,8 @@ public class ScoutTrackApi {
             //Get scout rank
             get("/scout/:id/rank",  (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
             		return scout.queryRank();
             	} catch (Exception e) {
             		return handle(response, e);
@@ -172,10 +174,11 @@ public class ScoutTrackApi {
             });
 
             //Update scout rank
-            put("/scout/:id/rank/:rank", (request, response) -> {
+            put("/scout/:id/rank", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		scout.updateRank(request.params("rank"));
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
+            		scout.updateRank(request.queryParams("rank"));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -190,7 +193,8 @@ public class ScoutTrackApi {
             //Get scout's meritbadges
             get("/scout/:id/mb", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
             		return new Gson().toJson(scout.queryMb());
             	} catch (Exception e) {
             		return handle(response, e);
@@ -198,10 +202,11 @@ public class ScoutTrackApi {
             });       
             
             //Add scout meritbadge
-            put("/scout/:id/mb/:meritbadgeName", (request, response) -> { 
+            put("/scout/:id/mb", (request, response) -> { 
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("meritbadgeName")), sql2o);
-            		scout.addMb(request.params("meritbadgeName"));
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
+            		scout.addMb(request.queryParams("mbName"));
             		return"";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -209,10 +214,11 @@ public class ScoutTrackApi {
             });
             
             //Remove a scout's meritbadge
-            delete("/scout/:id/mb/:meritbadgeName", (request, response) -> {
+            delete("/scout/:id/mb", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		scout.destroyMb(request.params("meritbadgeName"));
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
+            		scout.destroyMb(request.queryParams("meritbadgeName"));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -224,10 +230,11 @@ public class ScoutTrackApi {
             	return "Not Implemented";
             });
             
-            //Get user partial requirements
+            //Get scout partial requirements
             get("/scout/:id/req",  (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
             		List<RequirementObject> reqs =  scout.queryReq();
             		return new Gson().toJson(reqs);
             	} catch (Exception e) {
@@ -238,7 +245,8 @@ public class ScoutTrackApi {
             //Add scout requirement
             put("/scout/:id/req", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
             		scout.addReq(request.queryParams("name"), request.queryParams("rank"));
             		return "";
             	} catch (Exception e) {
@@ -249,8 +257,8 @@ public class ScoutTrackApi {
             //Remove scout requirement
             delete("/scout/:id/req", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		System.out.println(request.queryParams());
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
             		scout.destroyReq(request.queryParams("name"), request.queryParams("rank"));
             		return "";
             	} catch (Exception e) {
@@ -261,7 +269,8 @@ public class ScoutTrackApi {
             //Get scout name
             get("/scout/:id/name",  (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
             		return scout.queryName();
             	} catch (Exception e) {
             		return handle(response, e);
@@ -269,10 +278,11 @@ public class ScoutTrackApi {
             });
 
             //Update scout name
-            put("/scout/:id/name/:name", (request, response) -> {
+            put("/scout/:id/name", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		scout.updateName(new ScoutMapper(sql2o).validateName(request.params("name")));
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
+            		scout.updateName(new ScoutMapper(sql2o).validateName(request.queryParams("name")));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -282,7 +292,8 @@ public class ScoutTrackApi {
             //Get scout age
             get("/scout/:id/age",  (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
             		return scout.queryAge();
             	} catch (Exception e) {
             		return handle(response, e);
@@ -290,10 +301,11 @@ public class ScoutTrackApi {
             });
             
             //Update scout age
-            put("/scout/:id/age/:age", (request, response) -> {
+            put("/scout/:id/age", (request, response) -> {
             	try {
-            		Scout scout = new Scout(Integer.parseInt(request.params("id")), sql2o);
-            		scout.updateAge(new ScoutMapper(sql2o).validateAge(Integer.parseInt(request.params("age"))));
+            		int id = tokenManager.authenticateScout(request.headers("Authorization"));
+	            	Scout scout = new Scout(id, sql2o);
+            		scout.updateAge(new ScoutMapper(sql2o).validateAge(Integer.parseInt(request.queryParams("age"))));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -310,7 +322,8 @@ public class ScoutTrackApi {
             //Get leader name
             get("/leader/:id/name",  (request, response) -> { 
             	try { 
-            		Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
+            		Leader leader = new Leader(id, sql2o);
             		return leader.queryName();
             	} catch (Exception e) {
             		return handle(response, e);
@@ -318,10 +331,11 @@ public class ScoutTrackApi {
             });
             
             //Update leader name
-            put("/leader/:id/name/:name",  (request, response) -> {
+            put("/leader/:id/name",  (request, response) -> {
             	try {
-            		Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
-            		leader.updateName(new LeaderMapper(sql2o).validateName(request.params("name")));
+            		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
+            		Leader leader = new Leader(id, sql2o);
+            		leader.updateName(new LeaderMapper(sql2o).validateName(request.queryParams("name")));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -331,7 +345,8 @@ public class ScoutTrackApi {
             //Get leader email
             get("/leader/:id/email", (request, response) -> {
             	try {
-            		Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
+            		Leader leader = new Leader(id, sql2o);
             		return leader.queryEmail();
             	} catch (Exception e) {
             		return handle(response, e);
@@ -339,10 +354,11 @@ public class ScoutTrackApi {
             });
             
             //Update leader email
-            put("/leader/:id/email/:email", (request, response) -> {
+            put("/leader/:id/email", (request, response) -> {
             	try {
-            		Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
-            		leader.updateEmail(new LeaderMapper(sql2o).validateEmail(request.params("email")));
+            		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
+            		Leader leader = new Leader(id, sql2o);
+            		leader.updateEmail(new LeaderMapper(sql2o).validateEmail(request.queryParams("email")));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -352,7 +368,8 @@ public class ScoutTrackApi {
             //Get leader troop
             get("/leader/:id/troop",  (request, response) -> {
             	try {
-            		Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
+            		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
+            		Leader leader = new Leader(id, sql2o);
             		return leader.queryTroop();
             	} catch (Exception e) {
             		return handle(response, e);
@@ -360,10 +377,11 @@ public class ScoutTrackApi {
             });            
 
             //Update leader troop
-            put("/leader/:id/troop/:troop", (request, response) -> {
+            put("/leader/:id/troop", (request, response) -> {
               	try {
-              		Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
-              		leader.updateTroop(request.params("troop"));
+            		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
+            		Leader leader = new Leader(id, sql2o);
+              		leader.updateTroop(request.queryParams("troop"));
               		return "";
               	} catch (Exception e) {
             		return handle(response, e);
@@ -371,10 +389,11 @@ public class ScoutTrackApi {
             });
              
 			//Update leader password hash
-			put("/leader/:id/pwd/:pwd", (request, response) -> {
+			put("/leader/:id/pwd", (request, response) -> {
 				try {
-					Leader leader = new Leader(Integer.parseInt(request.params("id")), sql2o);
-					leader.updatePwd(new LeaderMapper(sql2o).validatePwd(request.params("pwd")));
+            		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
+            		Leader leader = new Leader(id, sql2o);
+					leader.updatePwd(new LeaderMapper(sql2o).validatePwd(request.queryParams("pwd")));
 					return "";
 				} catch (Exception e) {
             		return handle(response, e);
@@ -384,7 +403,7 @@ public class ScoutTrackApi {
             /* TROOP API */
             
             //Create new troop
-            post("/troop/new", (request, response) -> {
+            post("/troop", (request, response) -> {
             	try{
             		JsonObject json;
             		json = new JsonParser().parse(request.body()).getAsJsonObject();
@@ -400,7 +419,7 @@ public class ScoutTrackApi {
             });
             
             //Remove troop
-            delete("/troop/:id/destroy", (request, response) -> {
+            delete("/troop/:id", (request, response) -> {
             	return "Not Implemented";
             });
             
@@ -412,7 +431,9 @@ public class ScoutTrackApi {
             //Get troop name
             get("/troop/:id/name",  (request, response) -> {
             	try {
-            		Troop troop = new Troop(Integer.parseInt(request.params("id")), sql2o);
+            		int id = Integer.parseInt(request.params("id"));
+            		tokenManager.authenticateTroopLeader(request.headers("Authorization"), id);
+            		Troop troop = new Troop(id, sql2o);
             		return troop.queryName();
             	} catch (Exception e) {
             		return handle(response, e);
@@ -420,10 +441,12 @@ public class ScoutTrackApi {
             });
             
             //Update troop name
-            put("/troop/:id/name/:name", (request, response) -> {
+            put("/troop/:id/name", (request, response) -> {
             	try {
-            		Troop troop = new Troop(Integer.parseInt(request.params("id")), sql2o);
-            		troop.updateName(new TroopMapper(sql2o).validateName(request.params("name")));
+            		int id = Integer.parseInt(request.params("id"));
+            		tokenManager.authenticateTroopLeader(request.headers("Authorization"), id);
+            		Troop troop = new Troop(id, sql2o);
+            		troop.updateName(new TroopMapper(sql2o).validateName(request.queryParams("name")));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -433,9 +456,10 @@ public class ScoutTrackApi {
             //Get troop scout list
             get("/troop/:id/scouts",  (request, response) -> {
             	try {
-            		Troop troop = new Troop(Integer.parseInt(request.params("id")), sql2o);
-            		Gson gson = new Gson();
-            		return gson.toJson(troop.queryScouts());
+            		int id = Integer.parseInt(request.params("id"));
+            		tokenManager.authenticateTroopLeader(request.headers("Authorization"), id);
+            		Troop troop = new Troop(id, sql2o);
+            		return new Gson().toJson(troop.queryScouts());
             	} catch (Exception e) {
             		return handle(response, e);
             	}
@@ -447,21 +471,22 @@ public class ScoutTrackApi {
             });
             
             //Add scout to troop list
-            put("troop/:id/scouts/add", (request, response) ->{
+            put("troop/:id/scouts", (request, response) ->{
             	return "Not Implemented";
             });
             
             //Remove scout from troop list
-            delete("troop/:id/scouts/destroy", (request, response) -> {
+            delete("troop/:id/scouts", (request, response) -> {
             	return "Not Implemented";
             });
             
             //Get troop leaders
             get("troop/:id/leaders", (request, response) -> {
             	try {
-            		Troop troop = new Troop(Integer.parseInt(request.params("id")), sql2o);
-            		Gson gson = new Gson();
-            		response.body(gson.toJson(troop.queryLeaders()));
+            		int id = Integer.parseInt(request.params("id"));
+            		tokenManager.authenticateTroopLeader(request.headers("Authorization"), id);
+            		Troop troop = new Troop(id, sql2o);
+            		response.body(new Gson().toJson(troop.queryLeaders()));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -474,24 +499,23 @@ public class ScoutTrackApi {
             });
             
             //Add leader to troop list
-            put("troop/:id/leaders/add", (request, response) ->{
+            put("troop/:id/leaders", (request, response) ->{
             	return "Not Implemented";
             });
             
             //Remove leader from troop list
-            delete("troop/:id/leaders/destroy", (request, response) -> {
+            delete("troop/:id/leaders", (request, response) -> {
             	return "Not Implemented";
             });
-            
            	
     		/* TOKEN API */
     		
             //get Token ?Need database of Tokens?
-            get("/token/new", (request, response)-> {
+            get("/token", (request, response)-> {
                 try {
-                	return tokenManager.getToken(request.queryParams("name"), request.queryParams("pwd"), request.queryParams("type");
+                	return tokenManager.getToken(request.queryParams("email"), request.queryParams("pwd"), Integer.parseInt(request.queryParams("type")));
                 } catch (Exception e) {
-                	return handleLogin(response, e);
+                	return handle(response, e);
                 }
             });
             
@@ -501,12 +525,18 @@ public class ScoutTrackApi {
             });
         
             //destroy token
-            delete("/token/destroy", (request, response) -> {
+            delete("/token", (request, response) -> {
             	return "Not Implemented";
             });
             
         }
             
+    	/**
+    	 * Handles exceptions caused by http requests and returns appropriate response
+    	 * @param response Spark Response object
+    	 * @param e an exceptions
+    	 * @return reply to http request
+    	 */
         private static String handle(Response response, Exception e) {
        		 if (e instanceof NoRecordFoundException) {
        			 response.status(HTTP_BAD_REQUEST);
@@ -517,18 +547,23 @@ public class ScoutTrackApi {
        			response.status(HTTP_BAD_REQUEST);
        			return "Could Not Parse Request. Request Invalid.";
        		 }
+       		 else if(e instanceof AuthenticationException) {
+       			 response.status(HTTP_ACCESS_DENIED);
+       			 return "Could Not Authenticate. Access Denied.";
+       		 }
+       		 else if(e instanceof JOSEException) {
+       			 e.printStackTrace();
+       			 response.status(HTTP_ACCESS_DENIED);
+       			 return "Could Not Perform Secure Authentication.";
+       		 }
        		 else if(e instanceof Sql2oException) {
        			 e.printStackTrace();
        			 response.status(HTTP_INTERNAL_ERROR);
-       			 return "Database Error";
+       			 return "Database Error. Try Again Later.";
        		 }
        		 
        		 e.printStackTrace();
        		 response.status(HTTP_INTERNAL_ERROR);
-       		 return "Internal Error";
+       		 return "Internal Error. Try Again Later.";
        	 }
-        
-        private static String handleLogin(Response response, Exception e) {
-        	return handle(response,e);
-        }
     }

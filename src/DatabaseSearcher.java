@@ -214,6 +214,15 @@ public class DatabaseSearcher {
 		}			
 	}
 	
+	/**
+	 * Adds record to joint table
+	 * @param table database table's name
+	 * @param firstColumn first column's name
+	 * @param secondColumn second column's name
+	 * @param firstID id for first column
+	 * @param secondID id for second column
+	 * @throws Sql2oException thrown if database error occurs
+	 */
 	public void addJoinRecord(String table, String firstColumn, String secondColumn, int firstID, int secondID) throws Sql2oException {
 		String sql = "INSERT INTO " + table + " (" + firstColumn + ", " + secondColumn + ") VALUES (:firstID, :secondID)";
 		Connection conn = sql2o.beginTransaction();
@@ -371,7 +380,7 @@ public class DatabaseSearcher {
 	public int idOfMeritbadge(String mbName) throws Sql2oException, NoRecordFoundException {
 		return searchId(DatabaseNames.MB_TABLE, "name", mbName);
 	}
-	
+		
 	/**
 	 * Adds a collection to an sql statement (Meant to be used with addParameters method)
 	 * @param sql sql statement

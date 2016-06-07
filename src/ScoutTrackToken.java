@@ -13,10 +13,13 @@ import com.nimbusds.jwt.SignedJWT;
 public class ScoutTrackToken {
 	private byte[] secretKey;
 	private int userID;
-	private String userType;
+	private int userType;
 	
 	private int TOKEN_LIFESPAN = 60; //In days
 	private String SCOUTTRACK_IDENTIFIER = "http://scouttrack.org";
+	
+	public final static int SCOUT_TYPE = 0;
+	public final static int LEADER_TYPE = 1;
 	
 	/**
 	 * Initializes Token Info 
@@ -24,7 +27,7 @@ public class ScoutTrackToken {
 	 * @param userID user's id (from database)
 	 * @param userType user's account type (Scout, Leader, etc.)
 	 */
-	public ScoutTrackToken(byte[] secretKey, int userID, String userType) {
+	public ScoutTrackToken(byte[] secretKey, int userID, int userType) {
 		this.secretKey = secretKey;
 		this.userID = userID;
 		this.userType = userType;
@@ -33,7 +36,7 @@ public class ScoutTrackToken {
 	/**
 	 * Builds JWT using secret key. The token identifies one user.
 	 * @return Serialized JWT.
-	 * @throws JOSEException
+	 * @throws JOSEException thrown if encryption fails
 	 */
 	public String getSerialToken() throws JOSEException, KeyLengthException {
 		JWSSigner signer = new MACSigner(secretKey);	//Prepare to sign token with secret key

@@ -5,7 +5,6 @@ import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class ScoutMapper extends UserMapper {
