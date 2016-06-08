@@ -82,7 +82,9 @@ public class LeaderMapper extends UserMapper {
 	}
 	
 	public String validateEmail(String email) throws InvalidJsonDataException {
-		return super.validateEmail(email);
+		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidJsonDataException();
+		if(new DatabaseSearcher(sql2o).checkPresent(DatabaseNames.LEADER_TABLE, "email", email)) throw new InvalidJsonDataException();
+		return email;
 	}
 	
 	public String validatePwd(String pwd) throws InvalidJsonDataException {

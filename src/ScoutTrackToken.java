@@ -1,3 +1,4 @@
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -37,14 +38,17 @@ public class ScoutTrackToken {
 	 * Builds JWT using secret key. The token identifies one user.
 	 * @return Serialized JWT.
 	 * @throws JOSEException thrown if encryption fails
+	 * @throws AuthenticationException 
+	 * @throws ParseException 
 	 */
-	public String getSerialToken() throws JOSEException, KeyLengthException {
+	public String getSerialToken() throws JOSEException, KeyLengthException, ParseException, AuthenticationException {
 		JWSSigner signer = new MACSigner(secretKey);	//Prepare to sign token with secret key
 		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().claim("usr", userID).claim("typ", userType) //Add private claims
 				.issuer(SCOUTTRACK_IDENTIFIER).expirationTime(getExpiration(TOKEN_LIFESPAN)).build();	//Add standard claims
 		
 		SignedJWT token = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);	//Build token
 		token.sign(signer);			//Sign token
+		TokenManager.authenticate(token.serialize(), userType);
 		return token.serialize();	//Convert token to String
 	}
 	

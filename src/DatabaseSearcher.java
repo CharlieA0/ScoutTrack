@@ -296,6 +296,23 @@ public class DatabaseSearcher {
 	} 
 	
 	/**
+	 * Checks if the value is present in passed column in passed table
+	 * @param table name of table to search
+	 * @param column name of column to search
+	 * @param value value to search for
+	 * @return true if the value is present, else false;
+	 * @throws Sql2oException thrown by database error
+	 */
+	public boolean checkPresent(String table, String column, String value) throws Sql2oException {
+		try {
+			searchId(table, column, value);
+		} catch (NoRecordFoundException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
 	 * Removes record from database
 	 * @param table database table
 	 * @param id the id of the record

@@ -10,6 +10,7 @@ import spark.Response;
 
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.MalformedJsonException;
 import com.nimbusds.jose.JOSEException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -510,17 +511,26 @@ public class ScoutTrackApi {
            	
     		/* TOKEN API */
     		
-            //get Token ?Need database of Tokens?
-            get("/token", (request, response)-> {
+            //get Token for scout
+            get("/scout/token", (request, response)-> {
                 try {
-                	return tokenManager.getToken(request.queryParams("email"), request.queryParams("pwd"), Integer.parseInt(request.queryParams("type")));
+                	return tokenManager.getToken(request.queryParams("email"), request.queryParams("pwd"), ScoutTrackToken.SCOUT_TYPE);
+                } catch (Exception e) {
+                	return handle(response, e);
+                }
+            });
+            
+          //get Token for Leader
+            get("/leader/token", (request, response)-> {
+                try {
+                	return tokenManager.getToken(request.queryParams("email"), request.queryParams("pwd"), ScoutTrackToken.LEADER_TYPE);
                 } catch (Exception e) {
                 	return handle(response, e);
                 }
             });
             
             //renew token
-            get("/token/renew", (request, response)->{
+            put("/token", (request, response)->{
             	return "Not Implemented";
             });
         
@@ -540,14 +550,14 @@ public class ScoutTrackApi {
         private static String handle(Response response, Exception e) {
        		 if (e instanceof NoRecordFoundException) {
        			 response.status(HTTP_BAD_REQUEST);
-       			 e.printStackTrace();
        			 return "Request Data Invalid, No Record Found";
        		 }
-       		 else if (e instanceof JsonSyntaxException || e instanceof InvalidJsonDataException || e instanceof NumberFormatException) {
-       			response.status(HTTP_BAD_REQUEST);
-       			return "Could Not Parse Request. Request Invalid.";
+       		 else if (e instanceof JsonSyntaxException || e instanceof InvalidJsonDataException || e instanceof NumberFormatException || e instanceof MalformedJsonException) {
+       			 response.status(HTTP_BAD_REQUEST);
+       			 return "Could Not Parse Request. Request Invalid."; //Implement Unique Email Exception
        		 }
        		 else if(e instanceof AuthenticationException) {
+       			 e.printStackTrace();
        			 response.status(HTTP_ACCESS_DENIED);
        			 return "Could Not Authenticate. Access Denied.";
        		 }
@@ -556,7 +566,7 @@ public class ScoutTrackApi {
        			 response.status(HTTP_ACCESS_DENIED);
        			 return "Could Not Perform Secure Authentication.";
        		 }
-       		 else if(e instanceof Sql2oException) {
+       		 else if(e instanceof Sql2oException) { 
        			 e.printStackTrace();
        			 response.status(HTTP_INTERNAL_ERROR);
        			 return "Database Error. Try Again Later.";

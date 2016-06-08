@@ -3,16 +3,20 @@ import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.KeyLengthException;
+
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class Scout extends DatabaseSearcher implements DatabaseObject, User{
-
-	
 	private int id;
 	private Sql2o sql2o;
+	
+	private String email;
+	private String pwd;
 	
 	/**
 	 * Constructs a new Scout object and adds its profile info to the database
@@ -30,6 +34,9 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 		super(sql2o);
 		this.sql2o = sql2o;
 		this.id = addScout(name, email, pwd, rankID, age, troopID);
+		
+		this.email = email;
+		this.pwd = pwd;
 		
 		this.addReqList(reqID);
 		this.addMBList(mbID);

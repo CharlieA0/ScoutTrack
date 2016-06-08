@@ -1,11 +1,12 @@
 import java.util.Arrays;
 import java.util.List;
 
+import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
 public abstract class UserMapper extends DatabaseObjectMapper {
-	public final static int NAME_LENGTH = 70;
-	public final static int EMAIL_LENGTH = 70;
+	public final static int NAME_LENGTH = 50;
+	public final static int EMAIL_LENGTH = 50;
 	public final static int PWD_LENGTH = 64;
 	private final String[] USER_FIELDS = {"email", "pwd", "troop"};
 	
@@ -21,15 +22,12 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 	}
 	
 	/**
-	 * Validates User's email
+	 * Validates User's email (Note, emails must be unique)
 	 * @param email email of the user
 	 * @return email of user
 	 * @throws InvalidJsonDataException thrown if email fails to validate
 	 */
-	public String validateEmail(String email) throws InvalidJsonDataException {
-		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidJsonDataException();
-		return email;
-	}
+	public abstract String validateEmail(String email) throws InvalidJsonDataException;
 	
 	/**
 	 * Validates User's password hash

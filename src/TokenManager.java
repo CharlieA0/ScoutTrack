@@ -12,7 +12,7 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
 
 public class TokenManager extends DatabaseSearcher {
-	public final byte[] SECRET_KEY;
+	public static byte[] SECRET_KEY;
 	private Sql2o sql2o;
 	
 	
@@ -36,8 +36,9 @@ public class TokenManager extends DatabaseSearcher {
 	 * @throws AuthenticationException thrown if login info is not valid
 	 * @throws KeyLengthException thrown if key is not long enough
 	 * @throws JOSEException thrown if error in creating token
+	 * @throws ParseException 
 	 */
-	public String getToken(String email, String pwd, int userType) throws Sql2oException, AuthenticationException, KeyLengthException, JOSEException {
+	public String getToken(String email, String pwd, int userType) throws Sql2oException, AuthenticationException, KeyLengthException, JOSEException, ParseException {
 		int id;
 		try {
 			if(userType == ScoutTrackToken.SCOUT_TYPE) id =  getId(email, pwd, DatabaseNames.SCOUT_TABLE);
@@ -47,6 +48,7 @@ public class TokenManager extends DatabaseSearcher {
 			throw new AuthenticationException();
 		}
 		ScoutTrackToken token = new ScoutTrackToken(SECRET_KEY, id, userType);
+		authenticate(token.getSerialToken(), userType);
 		return token.getSerialToken();
 	}
 	
@@ -103,7 +105,7 @@ public class TokenManager extends DatabaseSearcher {
 	 * @throws AuthenticationException thrown if authentication fails
 	 * @throws JOSEException thrown if encryption fails
 	 */
-	private int authenticate(String tokenString, int userType) throws ParseException, AuthenticationException, JOSEException {
+	public static int authenticate(String tokenString, int userType) throws ParseException, AuthenticationException, JOSEException {
 		SignedJWT token = SignedJWT.parse(tokenString);
 		if (!inspectSignature(token)) throw new AuthenticationException();
 		if (token.getJWTClaimsSet().getIntegerClaim("typ") != userType) throw new AuthenticationException();
@@ -117,7 +119,7 @@ public class TokenManager extends DatabaseSearcher {
 	 * @throws ParseException thrown if token parsing fails
 	 * @throws JOSEException thrown if decryption fails
 	 */
-	private boolean inspectSignature(SignedJWT token) throws ParseException, JOSEException {
+	private static boolean inspectSignature(SignedJWT token) throws ParseException, JOSEException {
 		JWSVerifier verifier = new MACVerifier(SECRET_KEY);
 		if(!token.verify(verifier)) return false;											//Check signature
 		if(new Date().before(token.getJWTClaimsSet().getExpirationTime())) return false;	//Check expiration
@@ -134,7 +136,7 @@ public class TokenManager extends DatabaseSearcher {
 	 * @throws Sql2oException thrown if database error occurs
 	 */
 	private int getId(String email, String pwd, String table) throws NoRecordFoundException, Sql2oException {
-		String sql = "SELECT id FROM " + table + " WHERE usr=:usr AND pwd=:pwd"; 
+		String sql = "SELECT id FROM " + table + " WHERE email=:email AND pwd=:pwd"; 
 		Connection conn = sql2o.open();
 		String response = conn.createQuery(sql).addParameter("email", email).addParameter("pwd", pwd).executeAndFetchFirst(String.class);
 		if (response == null) throw new NoRecordFoundException();
