@@ -1,9 +1,15 @@
+package ScoutTrackApi;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
 import java.security.SecureRandom;
 
+/**
+ * Class encapsulating Leader database records and operations on such
+ * @author Charlie Vorbach
+ *
+ */
 public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	
 	private final Sql2o sql2o;
@@ -36,7 +42,6 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	
 	/**
 	 * Removes leader's records from database
-	 * @return true if successful, else false
 	 */
 	public void destroy() throws Sql2oException {
 		super.deleteFrom(DatabaseNames.LEADER_TABLE, id);
@@ -53,8 +58,8 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Retrieves leader's name from database
 	 * @return leader's name
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of leader is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String queryName() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.LEADER_TABLE, "name", id);
@@ -63,7 +68,6 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Updates leader's name in the database
 	 * @param name new name
-	 * @return true if successful, else false
 	 */
 	public void updateName(String name) throws Sql2oException {
 		super.updateString(DatabaseNames.LEADER_TABLE, "name", name, id);
@@ -72,8 +76,8 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Retrieves leader's email from database
 	 * @return the leader's email
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of leader is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String queryEmail() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.LEADER_TABLE, "email", id);
@@ -82,7 +86,6 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Updates leader's email in the database
 	 * @param email the new email
-	 * @return true if successful, else false
 	 */
 	public void updateEmail(String email) throws Sql2oException {
 		super.updateString(DatabaseNames.LEADER_TABLE, "email", email, id);
@@ -91,8 +94,8 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Gets leader's troop name from database
 	 * @return leader's troop's name
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of leader is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String queryTroop() throws Sql2oException, NoRecordFoundException {
 		int troopID = super.queryInt(DatabaseNames.LEADER_TABLE, "troopid", id);
@@ -102,9 +105,8 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Updates leader's troop in the database
 	 * @param troop the leader's new troop's name
-	 * @return true if successful, else false
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of troop is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public void updateTroop(String troop) throws Sql2oException, NoRecordFoundException {
 		int troopID = super.searchId(DatabaseNames.TROOP_TABLE, "name", troop);
@@ -114,8 +116,8 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Retrieves leader's salt from database
 	 * @return the leader's password salt
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of leader is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String querySalt() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.LEADER_TABLE, "salt", id);
@@ -124,7 +126,6 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Updates leader's password hash in the database
 	 * @param pwd the leader's password hash (not plaintext)
-	 * @return true if successful, else false
 	 */
 	public void updatePwd(String pwd) throws Sql2oException {
 		super.updateString(DatabaseNames.LEADER_TABLE, "pwd", pwd, id);
@@ -136,7 +137,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	 * @param email the leader's email
 	 * @param pwd the leader's password hash (not plaintext)
 	 * @param troopID the leader's troop's primary key
-	 * @return
+	 * @return id of leader
 	 */
 	private int addLeader(String name, String email, String pwd, int troopID) {
 		byte[] salt = getSalt();

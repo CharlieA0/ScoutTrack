@@ -1,9 +1,14 @@
+package ScoutTrackApi;
 import java.util.List;
 
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
-
+/**
+ * Class encapsulating troop collection of database objects and operations on such.
+ * @author Charlie Vorbach
+ *
+ */
 public class Troop extends DatabaseSearcher implements DatabaseObject{
 	
 	private int id;
@@ -97,20 +102,4 @@ public class Troop extends DatabaseSearcher implements DatabaseObject{
 			throw e;
 		}
 	}
-	
-	/*
-	 * Not Necessary?
-	 * 
-	 * private void addScouts (int[] scoutIDs) {
-		String sql = "UPDATE " + DatabaseNames.SCOUT_TABLE + " SET troopid = :troopid WHERE id=:scoutid;";
-		for(int scoutID : scoutIDs) {
-			try (Connection conn = sql2o.beginTransaction()) {
-				conn.createQuery(sql).addParameter("troopid", id).addParameter("scoutid", scoutID).executeUpdate();
-				conn.commit();
-			} catch (Sql2oException e) {
-				System.out.println(e);
-			}
-		}
-	}*/
-	
 }

@@ -1,3 +1,4 @@
+package ScoutTrackApi;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -7,10 +8,14 @@ import org.sql2o.Sql2oException;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
 
+/**
+ * Class for creating and managing json access tokens
+ * @author Charlie Vorbach
+ *
+ */
 public class TokenManager extends DatabaseSearcher {
 	private static byte[] SECRET_KEY;
 	private Sql2o sql2o;
@@ -19,26 +24,24 @@ public class TokenManager extends DatabaseSearcher {
 	/**
 	 * Initialize TokenManager
 	 * @param secretKey the secret key for the tokens
+	 * @param sql2o Sql2o database
 	 */
 	public TokenManager(Sql2o sql2o, byte[] secretKey) {
 		super(sql2o);
 		this.sql2o = sql2o;
-		this.SECRET_KEY = secretKey;
+		TokenManager.SECRET_KEY = secretKey;
 	}
 	
 	/**
 	 * Logs in user and retrieves access token
-	 * @param userName user's username
+	 * @param email email of user
 	 * @param pwd user's password
 	 * @param userType type of leader (e.g. Scout, Leader, etc.)
 	 * @return Serialized Json Access Token
-	 * @throws Sql2oException throw if database error
 	 * @throws AuthenticationException thrown if login info is not valid
-	 * @throws KeyLengthException thrown if key is not long enough
 	 * @throws JOSEException thrown if error in creating token
-	 * @throws ParseException 
 	 */
-	public String getToken(String email, String pwd, int userType) throws Sql2oException, AuthenticationException, KeyLengthException, JOSEException, ParseException {
+	public String getToken(String email, String pwd, int userType) throws AuthenticationException, JOSEException {
 		int id;
 		try {
 			if(userType == ScoutTrackToken.SCOUT_TYPE) id =  getId(email, pwd, DatabaseNames.SCOUT_TABLE);
@@ -83,9 +86,8 @@ public class TokenManager extends DatabaseSearcher {
 	 * @throws ParseException thrown if JWT can not be parsed
 	 * @throws AuthenticationException thrown if authentication fails
 	 * @throws JOSEException thrown if encryption fails
-	 * @throws Sql2oException thrown if database error occurs
 	 */
-	public int authenticateTroopLeader(String tokenString, int troopID) throws ParseException, AuthenticationException, JOSEException, Sql2oException, NoRecordFoundException {
+	public int authenticateTroopLeader(String tokenString, int troopID) throws ParseException, AuthenticationException, JOSEException    {
 		int leaderID = authenticate(tokenString, ScoutTrackToken.LEADER_TYPE);
 		try {
 			if(super.queryInt(DatabaseNames.LEADER_TABLE, "troopid", leaderID) != troopID) throw new AuthenticationException(); //Should I just make an additional claim? I think probably no b/c I can't revoke the jwt.

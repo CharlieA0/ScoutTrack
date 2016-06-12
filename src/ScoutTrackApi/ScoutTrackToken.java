@@ -1,4 +1,4 @@
-import java.text.ParseException;
+package ScoutTrackApi;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -6,13 +6,15 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
+/**
+ * Class encapsulating Json Access token and operations on such
+ * @author Charlie Vorbach
+ *
+ */
 public class ScoutTrackToken {
 	private byte[] secretKey;
 	private int userID;
@@ -40,10 +42,8 @@ public class ScoutTrackToken {
 	 * Builds JWT using secret key. The token identifies one user.
 	 * @return Serialized JWT.
 	 * @throws JOSEException thrown if encryption fails
-	 * @throws AuthenticationException 
-	 * @throws ParseException 
 	 */
-	public String getSerialToken() throws JOSEException, KeyLengthException, ParseException, AuthenticationException {
+	public String getSerialToken() throws JOSEException {
 		JWSSigner signer = new MACSigner(secretKey);	//Prepare to sign token with secret key
 		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().claim("id", userID).claim("typ", userType) //Add private claims
 				.issuer(SCOUTTRACK_IDENTIFIER).expirationTime(getExpiration(TOKEN_LIFESPAN)).build();	//Add standard claims

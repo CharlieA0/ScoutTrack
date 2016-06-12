@@ -1,22 +1,21 @@
+package ScoutTrackApi;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.KeyLengthException;
-
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Class encapsulating scout database record and operations on such
+ * @author Charlie Vorbach
+ *
+ */
 public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	private int id;
 	private Sql2o sql2o;
-	
-	private String email;
-	private String pwd;
 	
 	/**
 	 * Constructs a new Scout object and adds its profile info to the database
@@ -27,6 +26,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @param rankID scout's rank's primary key in database
 	 * @param age scout's age
 	 * @param troopID scout's troop's primary key in database
+	 * @param reqID list of requirement ids
+	 * @param mbID list of meritbadge ids
 	 * @throws InvalidDatabaseOperation thrown if invalid operation is performed on database
 	 * @throws Sql2oException thrown if database error occurs
 	 */
@@ -35,16 +36,14 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 		this.sql2o = sql2o;
 		this.id = addScout(name, email, pwd, rankID, age, troopID);
 		
-		this.email = email;
-		this.pwd = pwd;
-		
 		this.addReqList(reqID);
 		this.addMBList(mbID);
 	}
 	
 	/**
 	 * Constructs new Scout but doesn't add any information to database.
-	 * @param id
+	 * @param id id of scout
+	 * @param sql2o Sql2o Database object
 	 */
 	public Scout(int id, Sql2o sql2o){
 		super(sql2o);
@@ -54,7 +53,6 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	
 	/**
 	 * Removes scout from database
-	 * @return true on success else false
 	 */
 	public void destroy() {
 		super.deleteFrom(DatabaseNames.SCOUT_TABLE, id);
@@ -73,8 +71,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Gets scout's name from database
 	 * @return the scout's name
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String queryName() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.SCOUT_TABLE, "name", id);
@@ -82,8 +80,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	
 	/**
 	 * Updates scout's name in database
-	 * @return true on success else false
-	 * @throws Sql2oException
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public void updateName(String name) throws Sql2oException {
 		super.updateString(DatabaseNames.SCOUT_TABLE, "name", name, id);
@@ -92,8 +89,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Gets scout's email from database
 	 * @return the scout's email
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String queryEmail() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.SCOUT_TABLE, "email", id);
@@ -102,7 +99,6 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Updates scout's email in database
 	 * @param email the new email
-	 * @return true on success else false
 	 */
 	public void updateEmail(String email) throws Sql2oException {
 		super.updateString(DatabaseNames.SCOUT_TABLE, "email", email, id);
@@ -112,8 +108,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Gets scout's password hash from database
 	 * @return the scout's password hash
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String queryPwd() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.SCOUT_TABLE, "email", id);
@@ -121,7 +117,6 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	
 	/**
 	 * Updates scout's password hash in database
-	 * @return true on success, else false
 	 */
 	public void updatePwd(String pwd) throws Sql2oException {
 		super.updateString(DatabaseNames.SCOUT_TABLE, "pwd", pwd, id);
@@ -131,8 +126,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Gets scout's rank from database
 	 * @return the scout's rank
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String queryRank() throws Sql2oException, NoRecordFoundException {
 		int rankID = super.queryInt(DatabaseNames.SCOUT_TABLE, "rankid", id);
@@ -141,21 +136,33 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	
 	/**
 	 * Updates scout's rank in database
-	 * @param the scout's new rank
-	 * @return true if successful, else false
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @param rank the scout's new rank
+	 * @throws NoRecordFoundException thrown if no record of rank is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public void updateRank(String rank) throws Sql2oException, NoRecordFoundException {
 		int rankID = super.searchId(DatabaseNames.RANK_TABLE, "name", rank);
+		removePartialsBelow(rankID + 1);
 		super.updateInt(DatabaseNames.SCOUT_TABLE, "rankid", rankID, id);
+	}
+	
+	/**
+	 * Removes partial requirements of scout from database if they are below the passed rank
+	 * @param rankID id of rank
+	 */
+	private void removePartialsBelow(int rankID) {
+		String sql = "DELETE FROM " + DatabaseNames.SCOUT_REQ_TABLE + " WHERE scoutid=:scoutid AND rankid=:rankid";
+		Connection conn = sql2o.beginTransaction();
+		conn.createQuery(sql).addParameter("scoutid", id).addParameter("rankid", rankID).executeUpdate();
+		conn.commit();
 	}
 	
 	
 	/**
 	 * Gets scout's age from database
 	 * @return the scout's age
-	 * @throws NoRecordFoundException 
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public int queryAge() throws NoRecordFoundException, Sql2oException {
 			return super.queryInt(DatabaseNames.SCOUT_TABLE, "age", id);
@@ -163,7 +170,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	
 	/**
 	 * Updates scout's age in database
-	 * @return true on success, else false
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public void updateAge(int age) throws Sql2oException {
 		super.updateInt(DatabaseNames.SCOUT_TABLE, "age", age, id);
@@ -171,9 +178,9 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 
 	/**
 	 * Gets scout's troop from database
-	 * @return the  troop name
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @return the troop name
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String queryTroop() throws Sql2oException, NoRecordFoundException {
 		int troopID = super.queryInt(DatabaseNames.SCOUT_TABLE, "troopid", id);
@@ -182,19 +189,20 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	
 	/**
 	 * Updates scout's troop in database
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @param troopName name of the new troop
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
-	public void updateTroop(String troop) throws Sql2oException, NoRecordFoundException {
-		int troopID = super.searchId(DatabaseNames.TROOP_TABLE, "name", troop);
+	public void updateTroop(String troopName) throws Sql2oException, NoRecordFoundException {
+		int troopID = super.idOfTroop(troopName);
 		super.updateInt(DatabaseNames.SCOUT_TABLE, "troopid", troopID, id);
 	}
 	
 	/**
 	 * Gets scout's salt from database
 	 * @return the salt
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public String querySalt() throws Sql2oException, NoRecordFoundException {
 		return super.queryString(DatabaseNames.SCOUT_TABLE, "salt", id);
@@ -263,8 +271,8 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Get List of Merit Badges
 	 * @return List of Merit Badge Names
-	 * @throws Sql2oException
-	 * @throws NoRecordFoundException
+	 * @throws NoRecordFoundException thrown if no record of scout is found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public List <String> queryMb() throws Sql2oException, NoRecordFoundException {
 		List <Integer> meritbadgeIDs = super.fetchIntsWhere(DatabaseNames.SCOUT_MB_TABLE, "scoutid", id, "meritbadgeid"); 
@@ -357,24 +365,19 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 */
 	private int storeScoutData(String name, String email, String pwd, byte[] salt, int age, int troopID, int rankID) {
 		String sql = "insert into "+ DatabaseNames.SCOUT_TABLE + "(name, email, pwd, salt, age, troopid, rankid) VALUES (:name, :email, :password, :salt, :age, :troopID, :rankID)";
-		try (Connection conn = sql2o.beginTransaction()) {
-			int id = conn.createQuery(sql, true)
-				.addParameter("name", name)
-				.addParameter("email", email)
-				.addParameter("password", pwd)
-				.addParameter("salt", salt)
-				.addParameter("age", age)
-				.addParameter("troopID", troopID)
-				.addParameter("rankID", rankID)
-				.executeUpdate().getKey(Integer.class);
-			
-			conn.commit();			
-			return id;
-		}
-		catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.beginTransaction();
+		int id = conn.createQuery(sql, true)
+			.addParameter("name", name)
+			.addParameter("email", email)
+			.addParameter("password", pwd)
+			.addParameter("salt", salt)
+			.addParameter("age", age)
+			.addParameter("troopID", troopID)
+			.addParameter("rankID", rankID)
+			.executeUpdate().getKey(Integer.class);
+		
+		conn.commit();			
+		return id;
 	}
 	
 	/**

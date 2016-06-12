@@ -1,9 +1,15 @@
+package ScoutTrackApi;
 import java.util.Arrays;
 import java.util.List;
 
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
+/**
+ * Class mapping user json data to user database object
+ * @author Charlie
+ *
+ */
 public abstract class UserMapper extends DatabaseObjectMapper {
 	public final static int NAME_LENGTH = 50;
 	public final static int EMAIL_LENGTH = 50;
@@ -24,10 +30,17 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 	/**
 	 * Validates User's email (Note, emails must be unique)
 	 * @param email email of the user
+	 * @param sql2o database object
 	 * @return email of user
 	 * @throws InvalidDataException thrown if email fails to validate
 	 */
-	public abstract String validateEmail(String email) throws InvalidDataException;
+	public String validateEmail(String email, Sql2o sql2o) throws InvalidDataException {
+		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidDataException();
+		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
+		if(lookup.checkPresent(DatabaseNames.LEADER_TABLE, "email", email)) throw new InvalidDataException("email already in database");
+		if(lookup.checkPresent(DatabaseNames.SCOUT_TABLE, "email", email)) throw new InvalidDataException("email already in database");
+		return email;
+	}
 	
 	/**
 	 * Validates User's password hash
@@ -42,6 +55,7 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 	
 	/**
 	 * Gets Json field from superclass and adds user fields
+	 * @return list of fields
 	 */
 	protected List <String> getFields() {
 		List <String> fields = super.getFields();
@@ -51,6 +65,8 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 	
 	/**
 	 * Checks String is valid
+	 * @param str str to test
+	 * @param length max length of the string
 	 */
 	protected  boolean checkString(String str, int length) {
 		return super.checkString(str, length);
@@ -58,7 +74,6 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 
 	/**
 	 * Confirms user data is valid
-	 * @throws InvalidDatabaseOperation 
 	 */
 	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException;
 }

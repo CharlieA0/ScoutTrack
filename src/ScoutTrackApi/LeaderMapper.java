@@ -1,3 +1,4 @@
+package ScoutTrackApi;
 import java.util.Arrays;
 import java.util.List;
 
@@ -6,6 +7,11 @@ import org.sql2o.Sql2oException;
 
 import com.google.gson.JsonObject;
 
+/**
+ * Class mapping Leader json data to Leader database object
+ * @author Charlie Vorbach
+ *
+ */
 public class LeaderMapper extends UserMapper {
 	private final List <String> FIELDS;// = {"name", "email", "pwd", "troop"};
 	private final String[] LEADER_FIELDS = {};
@@ -22,8 +28,8 @@ public class LeaderMapper extends UserMapper {
 
 	/**
 	 * Constructs LeaderMapper which can validate and map Json data to Leader objects
-	 * @param json
-	 * @param sql2o
+	 * @param json json data
+	 * @param sql2o database object
 	 */
 	public LeaderMapper (JsonObject json, Sql2o sql2o) {
 		this.json = json;
@@ -33,6 +39,10 @@ public class LeaderMapper extends UserMapper {
 		this.FIELDS = getFields();
 	}
 	
+	/**
+	 * Construct LeaderMapper without Json data
+	 * @param sql2o database object
+	 */
 	public LeaderMapper (Sql2o sql2o) {
 		this.json = null;
 		this.sql2o = sql2o;
@@ -43,12 +53,11 @@ public class LeaderMapper extends UserMapper {
 	
 	/**
 	 * Checks that Json data is valid and can be mapped
-	 * @throws NoRecordFoundException 
-	 * @throws Sql2oException 
-	 * @throws InvalidDataException 
-	 * @throws NoJsonToParseException 
+	 * @throws Sql2oException thrown if database error occurs
+	 * @throws InvalidDataException thrown if json data is invalid
+	 * @throws NoJsonToParseException thrown if json data was not passed
 	 */
-	public void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException {
+	public void validate() throws Sql2oException, InvalidDataException, NoJsonToParseException {
 		if(json == null) throw new NoJsonToParseException();
 		
 		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
@@ -61,32 +70,48 @@ public class LeaderMapper extends UserMapper {
 		}
 				
 		//Check that Strings are not null and less than the max size
-		this.name = json.get("name").getAsString();
-		validateName(name);
-		
-		this.email = json.get("email").getAsString();
-		validateEmail(email);
-		
-		this.pwd = json.get("pwd").getAsString();
-		validatePwd(pwd);
-		
-		//Check that troop is in the database
-		this.troopID = lookup.idOfTroop(json.get("troop").getAsString());
-		if (troopID < 0) throw new InvalidDataException();
+		try {
+			this.name = json.get("name").getAsString();
+			validateName(name);
+			
+			this.email = json.get("email").getAsString();
+			validateEmail(email);
+			
+			this.pwd = json.get("pwd").getAsString();
+			validatePwd(pwd);
+			
+			//Check that troop is in the database
+			this.troopID = lookup.idOfTroop(json.get("troop").getAsString());
+			if (troopID < 0) throw new InvalidDataException();
+		} catch (ClassCastException | NoRecordFoundException e) {
+			throw new InvalidDataException();
+		}
 		
 		this.validated = true;
 	}
 	
+	/**
+	 * Checks that sting is valid name
+	 * @param name string to test
+	 */
 	public String validateName(String name) throws InvalidDataException {
 		return super.validateName(name);
 	}
 	
+	/**
+	 * Checks string is valid email
+	 * @param email string to test
+	 * @throws InvalidDataException thrown if string is not valid hash
+	 */
 	public String validateEmail(String email) throws InvalidDataException {
-		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidDataException();
-		if(new DatabaseSearcher(sql2o).checkPresent(DatabaseNames.LEADER_TABLE, "email", email)) throw new InvalidDataException();
-		return email;
+		return super.validateEmail(email, sql2o);
 	}
 	
+	/**
+	 * Checks String is valid hash
+	 * @param pwd string to test
+	 * @throws InvalidDataException thrown if string is not valid hash
+	 */
 	public String validatePwd(String pwd) throws InvalidDataException {
 		return super.validatePwd(pwd);
 	}
@@ -104,6 +129,7 @@ public class LeaderMapper extends UserMapper {
 	
 	/**
 	 * Gets necessary fields from super class and combines with those in leader class
+	 * @return list of fields
 	 */
 	protected List <String> getFields() {
 		List <String> fields = super.getFields();

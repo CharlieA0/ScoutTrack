@@ -1,4 +1,9 @@
-
+package ScoutTrackApi;
+/**
+ * Class storing names of various database tables
+ * @author Charlie Vorbach
+ *
+ */
 public class DatabaseNames {
 	protected final static String TROOP_TABLE = "troops";
 	protected final static String SCOUT_TABLE = "scouts";

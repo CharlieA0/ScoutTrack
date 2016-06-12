@@ -1,4 +1,9 @@
-
+package ScoutTrackApi;
+/**
+ * Object encapuslating scout requirement
+ * @author Charlie
+ *
+ */
 public class RequirementObject {
 	private String name;
 	private String rank;

@@ -1,3 +1,4 @@
+package ScoutTrackApi;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -6,6 +7,11 @@ import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
+/**
+ * Class containing methods for searching database
+ * @author Charlie Vorbach
+ *
+ */
 public class DatabaseSearcher {
 	private Sql2o sql2o;
 	
@@ -28,14 +34,10 @@ public class DatabaseSearcher {
 	 */
 	public String queryString(String table, String column, int id) throws NoRecordFoundException, Sql2oException {
 		String sql = "SELECT " + column + " FROM " + table + " WHERE id = :id";
-		try (Connection conn = sql2o.open()) {
-			String response = conn.createQuery(sql).addParameter("id", id).executeAndFetchFirst(String.class);
-			if (response == null) throw new NoRecordFoundException();
-			return response;
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.open();
+		String response = conn.createQuery(sql).addParameter("id", id).executeAndFetchFirst(String.class);
+		if (response == null) throw new NoRecordFoundException();
+		return response;
 	}
 	
 	/**
@@ -44,7 +46,7 @@ public class DatabaseSearcher {
 	 * @param column column to retrieve
 	 * @param ids ids of records to return
 	 * @return List of strings from column in records where ids match passed list
-	 * @throws NoRecordFoundException
+	 * @throws NoRecordFoundException thrown if no record is found
 	 */
 	public List <String> queryStrings(String table, String column, List <Integer> ids) throws NoRecordFoundException {
 		//Prepare sql
@@ -130,13 +132,9 @@ public class DatabaseSearcher {
 	 */
 	public void updateString(String table, String column, String value, int id) {
 		String sql = "UPDATE " + table + " SET " + column + " = :value WHERE  id = :id";
-		try (Connection conn = sql2o.beginTransaction()) {
-			conn.createQuery(sql).addParameter("value", value).addParameter("id", id).executeUpdate();
-			conn.commit();
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.beginTransaction();
+		conn.createQuery(sql).addParameter("value", value).addParameter("id", id).executeUpdate();
+		conn.commit();
 	}
 	
 	/**
@@ -150,15 +148,10 @@ public class DatabaseSearcher {
 	 */
 	public int queryInt(String table, String column, int id) throws NoRecordFoundException, Sql2oException {
 		String sql = "SELECT " + column + " FROM " + table + " WHERE id = :id";
-		try (Connection conn = sql2o.open()) {
-			String response = conn.createQuery(sql).addParameter("id", id).executeAndFetchFirst(String.class);
-			if (response == null) throw new NoRecordFoundException();
-			return Integer.parseInt(response);
-		} 
-		catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.open();
+		String response = conn.createQuery(sql).addParameter("id", id).executeAndFetchFirst(String.class);
+		if (response == null) throw new NoRecordFoundException();
+		return Integer.parseInt(response);
 	}
 	
 	/**
@@ -171,13 +164,9 @@ public class DatabaseSearcher {
 	 */
 	public void updateInt(String table, String column, int value, int id) {
 		String sql = "UPDATE " + table + " SET " + column + " = :value WHERE id = :id";
-		try(Connection conn = sql2o.beginTransaction()) {
-			conn.createQuery(sql).addParameter("value", value).addParameter("id", id).executeUpdate();
-			conn.commit();
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.beginTransaction();
+		conn.createQuery(sql).addParameter("value", value).addParameter("id", id).executeUpdate();
+		conn.commit();
 	}
 	
 	/**
@@ -201,17 +190,13 @@ public class DatabaseSearcher {
 		sql += "(:firstID" + (firstID.length - 1) + ", :secondID" + (secondID.length - 1) + ")";
 		
 		//make query
-		try (Connection conn = sql2o.beginTransaction()){
-			Query query = conn.createQuery(sql);
-			for(int i = 0; i < firstID.length; i++){
-				query.addParameter("firstID" + i, firstID[i]).addParameter("secondID" + i, secondID[i]);
-			}
-			query.executeUpdate();
-			conn.commit();
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}			
+		Connection conn = sql2o.beginTransaction();
+		Query query = conn.createQuery(sql);
+		for(int i = 0; i < firstID.length; i++){
+			query.addParameter("firstID" + i, firstID[i]).addParameter("secondID" + i, secondID[i]);
+		}
+		query.executeUpdate();
+		conn.commit();
 	}
 	
 	/**
@@ -241,14 +226,10 @@ public class DatabaseSearcher {
 	 */
 	public int searchId(String table, String column, String value) throws NoRecordFoundException, Sql2oException {
 		String sql = "SELECT id FROM " + table + " WHERE " + column + " = :value";
-		try(Connection conn = sql2o.open()) {
-			String response = conn.createQuery(sql).addParameter("value", value).executeAndFetchFirst(String.class);
-			if (response == null) throw new NoRecordFoundException();
-			return Integer.parseInt(response);
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.open();
+		String response = conn.createQuery(sql).addParameter("value", value).executeAndFetchFirst(String.class);
+		if (response == null) throw new NoRecordFoundException();
+		return Integer.parseInt(response);
 	}
 
 	public int searchId(String table, String column, int value) throws NoRecordFoundException, Sql2oException {
@@ -270,16 +251,12 @@ public class DatabaseSearcher {
 	 */
 	public List<Integer> searchIds(String table, String column, int value) throws NoRecordFoundException, Sql2oException {
 		String sql = "SELECT id FROM " + table + " WHERE " + column + " = :value";
-		try(Connection conn = sql2o.open()) {
-			List <String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
-			if(response == null) throw new NoRecordFoundException();
-			List <Integer> ids = new ArrayList<Integer>();
-			for(String id : response) ids.add(Integer.parseInt(id));
-			return ids;
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.open();
+		List <String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
+		if(response == null) throw new NoRecordFoundException();
+		List <Integer> ids = new ArrayList<Integer>();
+		for(String id : response) ids.add(Integer.parseInt(id));
+		return ids;
 	}
 	
 	/**
@@ -293,14 +270,10 @@ public class DatabaseSearcher {
 	 */
 	public List<String> searchIds(String table, String column, String value) throws NoRecordFoundException, Sql2oException {
 		String sql = "SELECT id FROM " + table + " WHERE " + column + " = :value";
-		try(Connection conn = sql2o.open()) {
-			List <String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
-			if(response == null) throw new NoRecordFoundException();
-			return response;
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.open();
+		List <String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
+		if(response == null) throw new NoRecordFoundException();
+		return response;
 	} 
 	
 	/**
@@ -337,13 +310,9 @@ public class DatabaseSearcher {
 	 */
 	public void deleteFrom(String table, int id) {
 		String sql = "DELETE FROM " + table + " WHERE id = :id";
-		try (Connection conn = sql2o.beginTransaction()) {
-			conn.createQuery(sql).addParameter("id", id).executeUpdate();
-			conn.commit();
-		} catch(Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.beginTransaction();
+		conn.createQuery(sql).addParameter("id", id).executeUpdate();
+		conn.commit();
 	}
 	
 	/**
@@ -354,13 +323,9 @@ public class DatabaseSearcher {
 	 */
 	public void deleteWhere(String table, String column, int value) {
 		String sql = "DELETE FROM " + table + " WHERE " + column + " = :value";
-		try (Connection conn = sql2o.beginTransaction()) {
-			conn.createQuery(sql).addParameter("value", value).executeUpdate();
-			conn.commit();
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.beginTransaction();
+		conn.createQuery(sql).addParameter("value", value).executeUpdate();
+		conn.commit();
 	}
 	
 	/**
@@ -388,20 +353,17 @@ public class DatabaseSearcher {
 	/**
 	 * Retrieves id of requirement with passed name
 	 * @param reqName the name of the requirement 
+	 * @param rankid id of the rank in database
 	 * @return the id of the requirement
 	 * @throws Sql2oException thrown by database error
 	 * @throws NoRecordFoundException thrown if no record is found
 	 */
 	public int idOfRequirement(String reqName, int rankid) throws Sql2oException, NoRecordFoundException {
 		String sql = "SELECT id FROM " + DatabaseNames.REQ_TABLE + " WHERE name = :name AND rankid = :rankid";
-		try (Connection conn = sql2o.open()) {
-			String response = conn.createQuery(sql).addParameter("name", reqName).addParameter("rankid", rankid).executeAndFetchFirst(String.class);
-			if(response == null) throw new NoRecordFoundException();
-			return Integer.parseInt(response);
-		} catch(Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.open();
+		String response = conn.createQuery(sql).addParameter("name", reqName).addParameter("rankid", rankid).executeAndFetchFirst(String.class);
+		if(response == null) throw new NoRecordFoundException();
+		return Integer.parseInt(response);
 	}
 	
 	/**

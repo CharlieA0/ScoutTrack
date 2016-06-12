@@ -1,5 +1,11 @@
+package ScoutTrackApi;
 import org.sql2o.Sql2oException;
 
+/**
+ * Standard interface for user database objects
+ * @author Charlie
+ *
+ */
 public interface User {
 	final int SALT_LENGTH = 32;
 

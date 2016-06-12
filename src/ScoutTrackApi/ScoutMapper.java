@@ -1,3 +1,4 @@
+package ScoutTrackApi;
 import java.util.Arrays;
 import java.util.List;
 
@@ -7,6 +8,11 @@ import org.sql2o.Sql2oException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+/**
+ * Class mapping json data to scout object
+ * @author Charlie Vorbach
+ *
+ */
 public class ScoutMapper extends UserMapper {
 	private final int MAX_SCOUT_AGE = 18;
 	private final int MIN_SCOUT_AGE = 10;
@@ -59,13 +65,11 @@ public class ScoutMapper extends UserMapper {
 	
 	/**
 	 * Checks that Json data is valid and can be mapped
-	 * @throws NoRecordFoundException thrown if json contains info (like ranks or troops) not in the database
 	 * @throws Sql2oException thrown by database error
 	 * @throws InvalidDataException thrown if json is malformed
 	 * @throws NoJsonToParseException thrown if object constructed without data
-	 * @throws InvalidDatabaseOperation thrown if duplicate email already in the database
 	 */
-	public void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException {
+	public void validate() throws Sql2oException, InvalidDataException, NoJsonToParseException {
 		if(json == null) throw new NoJsonToParseException();
 		
 		//Check json has all the necessary fields
@@ -83,7 +87,6 @@ public class ScoutMapper extends UserMapper {
 							
 			this.email = json.get("email").getAsString();
 			validateEmail(email);
-			if(!checkUniqueEmail(email)) throw new InvalidDataException("Email already in the database");
 			
 			this.pwd = json.get("pwd").getAsString();
 			validatePwd(pwd);
@@ -111,15 +114,16 @@ public class ScoutMapper extends UserMapper {
 	}
 	
 	/**
-	 * Validates that JsonArray contains valid requirements and return array of ids from database (This currently an ugly kludge, there must be a better way of doing this)
-	 * @param jsonReq
-	 * @return
-	 * @throws InvalidDataException
-	 * @throws Sql2oException
-	 * @throws NoRecordFoundException
+	 * Validates that JsonArray contains valid requirements and return array of ids from database
+	 * @param lookup Database searcher
+	 * @param jsonReqArray json array of requirement objects
+	 * @return list of requirement ids
+	 * @throws InvalidDataException thrown if too many requirements passed
+	 * @throws NoRecordFoundException thrown if no record of requirements are found
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public int[] validateRequirements(DatabaseSearcher lookup, JsonArray jsonReqArray) throws InvalidDataException, Sql2oException, NoRecordFoundException {
-		//Check number of partial requirements is valid
+		//Check number of partial requirements is valid	(This currently an ugly kludge, there must be a better way of doing this)
 		if (jsonReqArray.size() > MAX_REQ_NUMBER) throw new InvalidDataException();		//Check number of partial requirements is valid
 		reqID = new int[jsonReqArray.size()];												//Construct array to hold requirement ids
 		for (int i = 0; i < reqID.length; i++) {											//For each requirement in the array
@@ -198,6 +202,8 @@ public class ScoutMapper extends UserMapper {
 	
 	/**
 	 * Validates Scout Name
+	 * @param name string to test
+	 * @return name
 	 */
 	public String validateName(String name) throws InvalidDataException {
 		return super.validateName(name);
@@ -205,20 +211,17 @@ public class ScoutMapper extends UserMapper {
 	
 	/**
 	 * Validates Scout Email
+	 * @param email string to test
+	 * @return email
 	 */
 	public String validateEmail(String email) throws InvalidDataException {
-		System.out.println(email);
-		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidDataException();
-		return email;
-	}
-	
-	private boolean checkUniqueEmail(String email) {
-		if(new DatabaseSearcher(sql2o).checkPresent(DatabaseNames.SCOUT_TABLE, "email", email)) return false;
-		return true;
+		return super.validateEmail(email, sql2o);
 	}
 	
 	/**
 	 * Validates Scout Password Hash
+	 * @param pwd string to test
+	 * @return pwd
 	 */
 	public String validatePwd(String pwd) throws InvalidDataException {
 		return super.validatePwd(pwd);

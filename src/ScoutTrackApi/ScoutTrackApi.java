@@ -1,3 +1,4 @@
+package ScoutTrackApi;
 import static spark.Spark.get;
 import static spark.Spark.post;
 import static spark.Spark.put;
@@ -18,12 +19,16 @@ import com.google.gson.JsonObject;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
+/**
+ * REST Api for securely storing, updating, and retrieving Scout information
+ * @author Charlie Vorbach
+ */
 
 public class ScoutTrackApi {
 	private static final byte[] SECRET_KEY = KeyFunctions.generateSHA256();
 	private static final String DB_NAME = "scouttrack";
-	private static final String DB_USERNAME = "Charlie";
-	private static final String DB_PASSWORD = "Conway";
+	private static final String DB_USERNAME = "charlie";
+	private static final String DB_PASSWORD = "ui2389j";
 	
 	private static final int HTTP_BAD_REQUEST = 400;
 	private static final int HTTP_ACCESS_DENIED = 403;
@@ -41,7 +46,9 @@ public class ScoutTrackApi {
   		 
             /* USER API */
             
-            //Create new scout
+            /**
+             * Stores new scout in database
+             */
             post("/scout", (request, response) -> {
             	try {
             		JsonObject json;
@@ -53,16 +60,18 @@ public class ScoutTrackApi {
             		ScoutMapper scoutMap = new ScoutMapper(json, sql2o);	
             		scoutMap.validate();
         		
-            		//Store Scout in Database and return Scout ID
-            		Scout scout = scoutMap.getScout();
-            		return scout.getID();
+            		//Store Scout in Database and return
+            		scoutMap.getScout();
+            		return "";
             	
             	} catch (Exception e) {
             		return handle(response, e);
             	}
             });
 
-            //Remove scout
+            /**
+             * Removes Scout from database
+             */
             delete("/scout", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -74,7 +83,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Create new leader
+            /**
+             * Stores new leader in database
+             */
             post("/leader", (request, response) -> {
             	try {
             		JsonObject json;       
@@ -84,14 +95,17 @@ public class ScoutTrackApi {
             		LeaderMapper leaderMap = new LeaderMapper(json, sql2o);
             		leaderMap.validate();
             	
-            		Leader leader = leaderMap.getLeader();
-            		return leader.getID();
+            		//Store Leader
+            		leaderMap.getLeader();
+            		return "";
             	} catch (Exception e) {
             		return handle(response, e);
             	}
             });
             
-            //Remove leader
+            /**
+             * Remove leader from database
+             */
             delete("/leader", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
@@ -105,12 +119,16 @@ public class ScoutTrackApi {
             
             /* SCOUTS */
             
-            //Get all scout info
+            /**
+             * Retrieves a json containing Scout's information
+             */
             get("/scout/info",  (request, response) -> {
             	return "Not Implemented";
             });
         
-            //Get scout email
+            /**
+             * Retrieves scout's email
+             */
             get("/scout/email",  (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -121,7 +139,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update scout email
+            /**
+             * Updates scout's email
+             */
             put("/scout/email", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -133,7 +153,9 @@ public class ScoutTrackApi {
             	}
             });
 			
-			//Update scout password hash
+			/**
+			 * Updates scout's password hash (not plaintext)
+			 */
 			put("/scout/pwd", (request, response) -> {
                	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -145,7 +167,9 @@ public class ScoutTrackApi {
             	}
 			});
 			
-            //Get user troop
+            /**
+             * Retrieve's name of scout's troop
+             */
             get("/scout/troop",  (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -156,7 +180,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update scout troop
+            /**
+             * Updates scout's troop
+             */
             put("/scout/troop", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -168,7 +194,9 @@ public class ScoutTrackApi {
             	}
             });
 
-            //Get scout rank
+            /**
+             * Retrieve's name of scout's rank
+             */
             get("/scout/rank",  (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -179,7 +207,9 @@ public class ScoutTrackApi {
             	}
             });
 
-            //Update scout rank
+            /**
+             * Updates rank of scout
+             */
             put("/scout/rank", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -191,12 +221,16 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update scout list of meritbadges
+            /**
+             * Updates scout's meritbadges with new json list of meritbadges
+             */
             post("/scout/mb", (request, response) -> {
             	return "Not Implemented";
             });
             
-            //Get scout's meritbadges
+            /**
+             * Returns json of Scout's meritbadges
+             */
             get("/scout/mb", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -207,7 +241,9 @@ public class ScoutTrackApi {
             	}
             });       
             
-            //Add scout meritbadge
+            /**
+             * Adds meritbadge to scout
+             */
             put("/scout/mb", (request, response) -> { 
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -219,7 +255,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Remove a scout's meritbadge
+            /**
+             * Remove meritbadge from scout
+             */
             delete("/scout/mb", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -231,12 +269,16 @@ public class ScoutTrackApi {
             	}
             });
 
-            //Update scout partial requirements
+            /**
+             * Replaces scout's list of partial requirements with new list of partial requirements
+             */
             post("/scout/req", (request, response) -> {
             	return "Not Implemented";
             });
             
-            //Get scout partial requirements
+            /**
+             * Returns scout's list of partial requirements
+             */
             get("/scout/req",  (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -248,7 +290,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Add scout requirement
+            /**
+             * Adds partial requirement to scout
+             */
             put("/scout/req", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -261,7 +305,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Remove scout requirement
+            /**
+             * Removes partial requirement from scout
+             */
             delete("/scout/req", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -273,7 +319,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Get scout name
+            /**
+             * Gets scout's name
+             */
             get("/scout/name",  (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -284,7 +332,9 @@ public class ScoutTrackApi {
             	}
             });
 
-            //Update scout name
+            /**
+             * Updates scout's name
+             */
             put("/scout/name", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -296,7 +346,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Get scout age
+            /**
+             * Gets scout's age
+             */
             get("/scout/age",  (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -307,7 +359,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update scout age
+            /**
+             * Updates scout's age
+             */
             put("/scout/age", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
@@ -321,12 +375,16 @@ public class ScoutTrackApi {
             
             /* LEADERS */
 
-            //Get leader info
+            /**
+             * Get Leader info in json
+             */
             get("/leader/info",  (request, response) -> {
             	return "Not Implemented";
             });
             
-            //Get leader name
+            /**
+             * Get Leader's name
+             */
             get("/leader/name",  (request, response) -> { 
             	try { 
             		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
@@ -337,7 +395,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update leader name
+            /**
+             * Update leader's name
+             */
             put("/leader/name",  (request, response) -> {
             	try {
             		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
@@ -349,7 +409,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Get leader email
+            /**
+             * Update Leader's troop
+             */
             get("/leader/email", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
@@ -360,7 +422,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update leader email
+            /**
+             * Update Leader's email
+             */
             put("/leader/email", (request, response) -> {
             	try {
             		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
@@ -372,7 +436,9 @@ public class ScoutTrackApi {
             	}
             });
 
-            //Get leader troop
+            /**
+             * Get leader's troop name
+             */
             get("/leader/troop",  (request, response) -> {
             	try {
             		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
@@ -383,7 +449,9 @@ public class ScoutTrackApi {
             	}
             });            
 
-            //Update leader troop
+            /**
+             * Update leader's troop
+             */
             put("/leader/troop", (request, response) -> {
               	try {
             		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
@@ -395,7 +463,9 @@ public class ScoutTrackApi {
             	}
             });
              
-			//Update leader password hash
+			/**
+			 * Update leader's password hash (not plaintext)
+			 */
 			put("/leader/pwd", (request, response) -> {
 				try {
             		int id = tokenManager.authenticateLeader(request.headers("Authorization"));
@@ -409,7 +479,9 @@ public class ScoutTrackApi {
 
             /* TROOP API */
             
-            //Create new troop
+            /**
+             * Create new troop in database
+             */
             post("/troop", (request, response) -> {
             	try{
             		JsonObject json;
@@ -425,17 +497,23 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Remove troop
+            /**
+             * Remove troop from database
+             */
             delete("/troop/:id", (request, response) -> {
             	return "Not Implemented";
             });
             
-            //Get troop information
+            /**
+             * Get troop info from database
+             */
             get("/troop/:id/info", (request, response) -> {
             	return "Not Implemented";
             });
             
-            //Get troop name
+            /**
+             *Get troop name
+             */
             get("/troop/:id/name",  (request, response) -> {
             	try {
             		int id = Integer.parseInt(request.params("id"));
@@ -447,7 +525,9 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update troop name
+            /**
+             * Update troop name
+             */
             put("/troop/:id/name", (request, response) -> {
             	try {
             		int id = Integer.parseInt(request.params("id"));
@@ -460,7 +540,9 @@ public class ScoutTrackApi {
             	}
             });
 
-            //Get troop scout list
+            /**
+             * Get troop scout list
+             */
             get("/troop/:id/scouts",  (request, response) -> {
             	try {
             		int id = Integer.parseInt(request.params("id"));
@@ -472,22 +554,30 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update troop scout list
+            /**
+             * Update troop scout list
+             */
             post("troop/:id/scouts", (request, response) -> {
             	return "Not Implemented";
             });
             
-            //Add scout to troop list
+            /**
+             * Add scout to troop list
+             */
             put("troop/:id/scouts", (request, response) ->{
             	return "Not Implemented";
             });
             
-            //Remove scout from troop list
+            /**
+             * Remove scout from troop list
+             */
             delete("troop/:id/scouts", (request, response) -> {
             	return "Not Implemented";
             });
             
-            //Get troop leaders
+            /**
+             * Get troop leaders
+             */
             get("troop/:id/leaders", (request, response) -> {
             	try {
             		int id = Integer.parseInt(request.params("id"));
@@ -500,24 +590,32 @@ public class ScoutTrackApi {
             	}
             });
             
-            //Update troop leader list
+            /**
+             * Update troop leader list
+             */
             post("troop/:id/leaders", (request, response) -> {
             	return "Not Implemented";
             });
             
-            //Add leader to troop list
+            /**
+             * Add leader to troop list
+             */
             put("troop/:id/leaders", (request, response) ->{
             	return "Not Implemented";
             });
             
-            //Remove leader from troop list
+            /**
+             * Remove leader from troop list
+             */
             delete("troop/:id/leaders", (request, response) -> {
             	return "Not Implemented";
             });
            	
     		/* TOKEN API */
     		
-            //get Token for scout
+            /**
+             * get Token for scout
+             */
             get("/scout/token", (request, response)-> {
                 try {
                 	ScoutMapper map = new ScoutMapper(sql2o);
@@ -527,7 +625,9 @@ public class ScoutTrackApi {
                 }
             });
             
-          //get Token for Leader
+          /**
+           * get Token for Leader
+           */
             get("/leader/token", (request, response)-> {
                 try {
                 	return tokenManager.getToken(request.queryParams("email"), request.queryParams("pwd"), ScoutTrackToken.LEADER_TYPE);
@@ -536,12 +636,16 @@ public class ScoutTrackApi {
                 }
             });
             
-            //renew token
+            /**
+             * renew token
+             */
             put("/token", (request, response)->{
             	return "Not Implemented";
             });
         
-            //destroy token
+            /**
+             * destroy token
+             */
             delete("/token", (request, response) -> {
             	return "Not Implemented";
             });
@@ -560,12 +664,10 @@ public class ScoutTrackApi {
        			 return "Request Data Invalid, No Record Found";
        		 }
        		 else if (e instanceof JsonSyntaxException || e instanceof InvalidDataException || e instanceof NumberFormatException || e instanceof MalformedJsonException) {
-       			 e.printStackTrace();
        			 response.status(HTTP_BAD_REQUEST);
        			 return "Could Not Parse Request. Request Invalid."; //Implement Unique Email Exception
        		 }
        		 else if(e instanceof AuthenticationException) {
-       			 e.printStackTrace();
        			 response.status(HTTP_ACCESS_DENIED);
        			 return "Could Not Authenticate. Access Denied.";
        		 }

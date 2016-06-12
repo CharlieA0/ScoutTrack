@@ -1,5 +1,10 @@
+package ScoutTrackApi;
 import java.security.SecureRandom;
 
+/**
+ * Functions for generating keys and performing key operations
+ * @author Charlie Vorbach
+ */
 public class KeyFunctions {
 	private final static int keyLengthSHA256 = 32;
 	
