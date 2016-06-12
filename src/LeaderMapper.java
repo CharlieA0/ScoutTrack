@@ -45,10 +45,10 @@ public class LeaderMapper extends UserMapper {
 	 * Checks that Json data is valid and can be mapped
 	 * @throws NoRecordFoundException 
 	 * @throws Sql2oException 
-	 * @throws InvalidJsonDataException 
+	 * @throws InvalidDataException 
 	 * @throws NoJsonToParseException 
 	 */
-	public void validate() throws Sql2oException, NoRecordFoundException, InvalidJsonDataException, NoJsonToParseException {
+	public void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException {
 		if(json == null) throw new NoJsonToParseException();
 		
 		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
@@ -56,7 +56,7 @@ public class LeaderMapper extends UserMapper {
 		//Check that json has all the necessary fields
 		for (String field : FIELDS) {
 			if (!json.has(field)) {
-				throw new InvalidJsonDataException();
+				throw new InvalidDataException();
 			}
 		}
 				
@@ -72,22 +72,22 @@ public class LeaderMapper extends UserMapper {
 		
 		//Check that troop is in the database
 		this.troopID = lookup.idOfTroop(json.get("troop").getAsString());
-		if (troopID < 0) throw new InvalidJsonDataException();
+		if (troopID < 0) throw new InvalidDataException();
 		
 		this.validated = true;
 	}
 	
-	public String validateName(String name) throws InvalidJsonDataException {
+	public String validateName(String name) throws InvalidDataException {
 		return super.validateName(name);
 	}
 	
-	public String validateEmail(String email) throws InvalidJsonDataException {
-		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidJsonDataException();
-		if(new DatabaseSearcher(sql2o).checkPresent(DatabaseNames.LEADER_TABLE, "email", email)) throw new InvalidJsonDataException();
+	public String validateEmail(String email) throws InvalidDataException {
+		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidDataException();
+		if(new DatabaseSearcher(sql2o).checkPresent(DatabaseNames.LEADER_TABLE, "email", email)) throw new InvalidDataException();
 		return email;
 	}
 	
-	public String validatePwd(String pwd) throws InvalidJsonDataException {
+	public String validatePwd(String pwd) throws InvalidDataException {
 		return super.validatePwd(pwd);
 	}
 	

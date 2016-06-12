@@ -6,8 +6,10 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
@@ -43,12 +45,12 @@ public class ScoutTrackToken {
 	 */
 	public String getSerialToken() throws JOSEException, KeyLengthException, ParseException, AuthenticationException {
 		JWSSigner signer = new MACSigner(secretKey);	//Prepare to sign token with secret key
-		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().claim("usr", userID).claim("typ", userType) //Add private claims
+		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().claim("id", userID).claim("typ", userType) //Add private claims
 				.issuer(SCOUTTRACK_IDENTIFIER).expirationTime(getExpiration(TOKEN_LIFESPAN)).build();	//Add standard claims
 		
 		SignedJWT token = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);	//Build token
-		token.sign(signer);			//Sign token
-		TokenManager.authenticate(token.serialize(), userType);
+		token.sign(signer);																//Sign token
+								
 		return token.serialize();	//Convert token to String
 	}
 	

@@ -12,7 +12,7 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
 
 public class TokenManager extends DatabaseSearcher {
-	public static byte[] SECRET_KEY;
+	private static byte[] SECRET_KEY;
 	private Sql2o sql2o;
 	
 	
@@ -48,7 +48,6 @@ public class TokenManager extends DatabaseSearcher {
 			throw new AuthenticationException();
 		}
 		ScoutTrackToken token = new ScoutTrackToken(SECRET_KEY, id, userType);
-		authenticate(token.getSerialToken(), userType);
 		return token.getSerialToken();
 	}
 	
@@ -105,7 +104,8 @@ public class TokenManager extends DatabaseSearcher {
 	 * @throws AuthenticationException thrown if authentication fails
 	 * @throws JOSEException thrown if encryption fails
 	 */
-	public static int authenticate(String tokenString, int userType) throws ParseException, AuthenticationException, JOSEException {
+	private int authenticate(String tokenString, int userType) throws ParseException, AuthenticationException, JOSEException {
+		if (tokenString == null) throw new AuthenticationException();
 		SignedJWT token = SignedJWT.parse(tokenString);
 		if (!inspectSignature(token)) throw new AuthenticationException();
 		if (token.getJWTClaimsSet().getIntegerClaim("typ") != userType) throw new AuthenticationException();
@@ -119,10 +119,10 @@ public class TokenManager extends DatabaseSearcher {
 	 * @throws ParseException thrown if token parsing fails
 	 * @throws JOSEException thrown if decryption fails
 	 */
-	private static boolean inspectSignature(SignedJWT token) throws ParseException, JOSEException {
+	private boolean inspectSignature(SignedJWT token) throws ParseException, JOSEException {
 		JWSVerifier verifier = new MACVerifier(SECRET_KEY);
 		if(!token.verify(verifier)) return false;											//Check signature
-		if(new Date().before(token.getJWTClaimsSet().getExpirationTime())) return false;	//Check expiration
+		if(new Date().after(token.getJWTClaimsSet().getExpirationTime())) return false;	//Check expiration
 		return true;
 	}
 	

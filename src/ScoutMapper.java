@@ -61,16 +61,17 @@ public class ScoutMapper extends UserMapper {
 	 * Checks that Json data is valid and can be mapped
 	 * @throws NoRecordFoundException thrown if json contains info (like ranks or troops) not in the database
 	 * @throws Sql2oException thrown by database error
-	 * @throws InvalidJsonDataException thrown if json is malformed
+	 * @throws InvalidDataException thrown if json is malformed
 	 * @throws NoJsonToParseException thrown if object constructed without data
+	 * @throws InvalidDatabaseOperation thrown if duplicate email already in the database
 	 */
-	public void validate() throws Sql2oException, NoRecordFoundException, InvalidJsonDataException, NoJsonToParseException {
+	public void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException {
 		if(json == null) throw new NoJsonToParseException();
 		
 		//Check json has all the necessary fields
 		for(String field : FIELDS){
 			if(!json.has(field)) {
-				throw new InvalidJsonDataException();
+				throw new InvalidDataException();
 			}
 		}
 				
@@ -82,6 +83,7 @@ public class ScoutMapper extends UserMapper {
 							
 			this.email = json.get("email").getAsString();
 			validateEmail(email);
+			if(!checkUniqueEmail(email)) throw new InvalidDataException("Email already in the database");
 			
 			this.pwd = json.get("pwd").getAsString();
 			validatePwd(pwd);
@@ -102,7 +104,7 @@ public class ScoutMapper extends UserMapper {
 			validateMeritbadges(jsonMb);
 		}
 		catch (ClassCastException | NoRecordFoundException e){
-			throw new InvalidJsonDataException();
+			throw new InvalidDataException();
 		}
 		
 		this.validated = true;
@@ -112,19 +114,19 @@ public class ScoutMapper extends UserMapper {
 	 * Validates that JsonArray contains valid requirements and return array of ids from database (This currently an ugly kludge, there must be a better way of doing this)
 	 * @param jsonReq
 	 * @return
-	 * @throws InvalidJsonDataException
+	 * @throws InvalidDataException
 	 * @throws Sql2oException
 	 * @throws NoRecordFoundException
 	 */
-	public int[] validateRequirements(DatabaseSearcher lookup, JsonArray jsonReqArray) throws InvalidJsonDataException, Sql2oException, NoRecordFoundException {
+	public int[] validateRequirements(DatabaseSearcher lookup, JsonArray jsonReqArray) throws InvalidDataException, Sql2oException, NoRecordFoundException {
 		//Check number of partial requirements is valid
-		if (jsonReqArray.size() > MAX_REQ_NUMBER) throw new InvalidJsonDataException();		//Check number of partial requirements is valid
+		if (jsonReqArray.size() > MAX_REQ_NUMBER) throw new InvalidDataException();		//Check number of partial requirements is valid
 		reqID = new int[jsonReqArray.size()];												//Construct array to hold requirement ids
 		for (int i = 0; i < reqID.length; i++) {											//For each requirement in the array
 			JsonObject jsonReq = jsonReqArray.get(i).getAsJsonObject();						//Get requirement json object
 			String reqName = jsonReq.get("name").getAsString();								//Get requirement name
 			int reqRankID = lookup.idOfRank(jsonReq.get("rank").getAsString());				//Get requirement rank (Separate lookup)
-			if (reqRankID <= this.rankID) throw new InvalidJsonDataException();				//if requirement is for rank lower than the scout's current rank, throw an exception
+			if (reqRankID <= this.rankID) throw new InvalidDataException();				//if requirement is for rank lower than the scout's current rank, throw an exception
 			reqID[i] = validateRequirement(lookup, reqName, reqRankID);						//validate requirement and add it to the array
 		}
 		return reqID; 
@@ -134,25 +136,44 @@ public class ScoutMapper extends UserMapper {
 	 * Check that a string is a valid requirement in the database and returns id of record
 	 * @param req the name of the requirement
 	 * @return id of the requirement
-	 * @throws InvalidJsonDataException thrown if string is not a valid requirement name
+	 * @throws InvalidDataException thrown if string is not a valid requirement name
 	 * @throws Sql2oException thrown by database error
 	 * @throws NoRecordFoundException thrown if no requirement with that name is found in database
 	 */
-	public int validateRequirement(DatabaseSearcher lookup, String req, int reqRankID) throws InvalidJsonDataException, Sql2oException, NoRecordFoundException { 
-		if( req == null || req.length() > MAX_REQ_LENGTH) throw new InvalidJsonDataException();
+	private int validateRequirement(DatabaseSearcher lookup, String req, int reqRankID) throws InvalidDataException, Sql2oException, NoRecordFoundException { 
+		if( req == null || req.length() > MAX_REQ_LENGTH) throw new InvalidDataException();
 		return lookup.idOfRequirement(req, reqRankID);
+	}
+	
+	/**
+	 * Check that requirement is valid and in database 
+	 * @param lookup database searcher object
+	 * @param scoutID id of the scout
+	 * @param reqName name of requirement
+	 * @param reqRankName name of requirement's rank
+	 * @return id of requirement in database
+	 * @throws InvalidDataException thrown if requirement is not valid
+	 * @throws Sql2oException thrown if database error
+	 * @throws NoRecordFoundException thrown if requirement not found in database.
+	 */
+	public int validateNewRequirement(DatabaseSearcher lookup, int scoutID, String reqName, String reqRankName) throws InvalidDataException, Sql2oException, NoRecordFoundException {
+		int scoutRankID = lookup.queryInt(DatabaseNames.SCOUT_TABLE, "rankid", scoutID);
+		int reqRankID = lookup.idOfRank(reqRankName);
+		if (scoutRankID >= reqRankID) throw new InvalidDataException();
+		int reqID = lookup.idOfRequirement(reqName, rankID);		
+		return reqID;
 	}
 	
 	/**
 	 * Validates a JsonArray of meritbadge names and returns any array of their ids
 	 * @param jsonMB JsonArray of meritbadge names
 	 * @return array of meritbadge ids
-	 * @throws InvalidJsonDataException thrown if json fails to validate
+	 * @throws InvalidDataException thrown if json fails to validate
 	 * @throws NoRecordFoundException  thrown if meritbadge name not found in database
 	 * @throws Sql2oException thrown if database error
 	 */
-	public int[] validateMeritbadges(JsonArray jsonMB) throws InvalidJsonDataException, Sql2oException, NoRecordFoundException {
-		if(jsonMB.size() > MAX_MB_NUMBER) throw new InvalidJsonDataException();
+	public int[] validateMeritbadges(JsonArray jsonMB) throws InvalidDataException, Sql2oException, NoRecordFoundException {
+		if(jsonMB.size() > MAX_MB_NUMBER) throw new InvalidDataException();
 		
 		mbID = new int[jsonMB.size()];
 		for(int i = 0; i < mbID.length; i++) {
@@ -165,12 +186,12 @@ public class ScoutMapper extends UserMapper {
 	 * Verifies meritbadge name and returns id of meritbadge record
 	 * @param mb meritbadge name
 	 * @return id of meritbadge
-	 * @throws InvalidJsonDataException thrown if meritbadge name fails validation
+	 * @throws InvalidDataException thrown if meritbadge name fails validation
 	 * @throws Sql2oException thrown if database error
 	 * @throws NoRecordFoundException thrown if name not found in database
 	 */
-	public int validateMeritbadge(String mb) throws InvalidJsonDataException, Sql2oException, NoRecordFoundException {
-		if(mb == null || mb.length() > MAX_MB_LENGTH) throw new InvalidJsonDataException();
+	public int validateMeritbadge(String mb) throws InvalidDataException, Sql2oException, NoRecordFoundException {
+		if(mb == null || mb.length() > MAX_MB_LENGTH) throw new InvalidDataException();
 		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
 		return lookup.idOfMeritbadge(mb);
 	}
@@ -178,23 +199,28 @@ public class ScoutMapper extends UserMapper {
 	/**
 	 * Validates Scout Name
 	 */
-	public String validateName(String name) throws InvalidJsonDataException {
+	public String validateName(String name) throws InvalidDataException {
 		return super.validateName(name);
 	}
 	
 	/**
 	 * Validates Scout Email
 	 */
-	public String validateEmail(String email) throws InvalidJsonDataException {
-		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidJsonDataException();
-		if(new DatabaseSearcher(sql2o).checkPresent(DatabaseNames.SCOUT_TABLE, "email", email)) throw new InvalidJsonDataException();
+	public String validateEmail(String email) throws InvalidDataException {
+		System.out.println(email);
+		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidDataException();
 		return email;
+	}
+	
+	private boolean checkUniqueEmail(String email) {
+		if(new DatabaseSearcher(sql2o).checkPresent(DatabaseNames.SCOUT_TABLE, "email", email)) return false;
+		return true;
 	}
 	
 	/**
 	 * Validates Scout Password Hash
 	 */
-	public String validatePwd(String pwd) throws InvalidJsonDataException {
+	public String validatePwd(String pwd) throws InvalidDataException {
 		return super.validatePwd(pwd);
 	}
 	
@@ -202,10 +228,10 @@ public class ScoutMapper extends UserMapper {
 	 * Validates Scout Age
 	 * @param age age of scout
 	 * @return the age
-	 * @throws InvalidJsonDataException thrown if age fails to validate
+	 * @throws InvalidDataException thrown if age fails to validate
 	 */
-	public int validateAge(int age) throws InvalidJsonDataException {
-		if (age > MAX_SCOUT_AGE || age < MIN_SCOUT_AGE) throw new InvalidJsonDataException();
+	public int validateAge(int age) throws InvalidDataException {
+		if (age > MAX_SCOUT_AGE || age < MIN_SCOUT_AGE) throw new InvalidDataException();
 		return age;
 	}
 	

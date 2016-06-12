@@ -14,10 +14,10 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 	 * Validates User's name
 	 * @param name name of the user
 	 * @return the name of the user
-	 * @throws InvalidJsonDataException thrown if name fails to validate
+	 * @throws InvalidDataException thrown if name fails to validate
 	 */
-	public String validateName(String name) throws InvalidJsonDataException {
-		if(!checkString(name, NAME_LENGTH)) throw new InvalidJsonDataException();
+	public String validateName(String name) throws InvalidDataException {
+		if(!checkString(name, NAME_LENGTH)) throw new InvalidDataException();
 		return name;
 	}
 	
@@ -25,18 +25,18 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 	 * Validates User's email (Note, emails must be unique)
 	 * @param email email of the user
 	 * @return email of user
-	 * @throws InvalidJsonDataException thrown if email fails to validate
+	 * @throws InvalidDataException thrown if email fails to validate
 	 */
-	public abstract String validateEmail(String email) throws InvalidJsonDataException;
+	public abstract String validateEmail(String email) throws InvalidDataException;
 	
 	/**
 	 * Validates User's password hash
 	 * @param pwd the user's password hash
 	 * @return pwd hash of user
-	 * @throws InvalidJsonDataException thrown if pwd hash fails to validate
+	 * @throws InvalidDataException thrown if pwd hash fails to validate
 	 */
-	public String validatePwd(String pwd) throws InvalidJsonDataException {
-		if(pwd == null || pwd.length() != PWD_LENGTH) throw new InvalidJsonDataException();
+	public String validatePwd(String pwd) throws InvalidDataException {
+		if(pwd == null || pwd.length() != PWD_LENGTH) throw new InvalidDataException();
 		return pwd;
 	}
 	
@@ -58,6 +58,7 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 
 	/**
 	 * Confirms user data is valid
+	 * @throws InvalidDatabaseOperation 
 	 */
-	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidJsonDataException, NoJsonToParseException;
+	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException;
 }

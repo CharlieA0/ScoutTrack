@@ -250,6 +250,14 @@ public class DatabaseSearcher {
 			throw e;
 		}
 	}
+
+	public int searchId(String table, String column, int value) throws NoRecordFoundException, Sql2oException {
+		String sql = "SELECT id FROM " + table + " WHERE " + column + " = :value";
+		Connection conn = sql2o.open();
+		String response = conn.createQuery(sql).addParameter("value", value).executeAndFetchFirst(String.class);
+		if (response == null) throw new NoRecordFoundException();
+		return Integer.parseInt(response);
+	}
 	
 	/**
 	 * Retrieve ids of all records in table where column equals integer value
@@ -304,6 +312,15 @@ public class DatabaseSearcher {
 	 * @throws Sql2oException thrown by database error
 	 */
 	public boolean checkPresent(String table, String column, String value) throws Sql2oException {
+		try {
+			searchId(table, column, value);
+		} catch (NoRecordFoundException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean checkPresent(String table, String column, int value) throws Sql2oException {
 		try {
 			searchId(table, column, value);
 		} catch (NoRecordFoundException e) {

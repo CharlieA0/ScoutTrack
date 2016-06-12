@@ -202,9 +202,9 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	
 	/**
 	 * Get a list of partial requirements the scout has completed (Json String)
-	 * @return
-	 * @throws Sql2oException
-	 * @throws NoRecordFoundException
+	 * @return returns list of requirement objects
+	 * @throws Sql2oException thrown if database error occurs
+	 * @throws NoRecordFoundException thrown if no record of requirement is found in database
 	 */
 	public List<RequirementObject> queryReq() throws Sql2oException, NoRecordFoundException {
 		//Get reqIDs
@@ -233,12 +233,17 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Adds a partial requirement to scout in database
 	 * @param reqName name of the partial requirement
+	 * @param rank rank name of rank requirement is part of
 	 * @throws Sql2oException thrown by database error
 	 * @throws NoRecordFoundException thrown if name of requirement is not found
 	 */
 	public void addReq(String reqName, String rank) throws Sql2oException, NoRecordFoundException {
 		int rankID = super.idOfRank(rank);
 		int reqID = super.idOfRequirement(reqName, rankID);
+		super.addJoinRecord(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", "reqid", id, reqID);
+	}
+	
+	public void addReq(int reqID) {
 		super.addJoinRecord(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", "reqid", id, reqID);
 	}
 	
@@ -250,7 +255,6 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	 * @throws NoRecordFoundException thrown if no record of rank name or requirement name is found
 	 */
 	public void destroyReq(String reqName, String rank) throws Sql2oException, NoRecordFoundException {
-		System.out.println(rank);
 		int rankID = super.idOfRank(rank);
 		int reqID = super.idOfRequirement(reqName, rankID);
 		super.deleteWhere(DatabaseNames.SCOUT_REQ_TABLE, "reqid", reqID);

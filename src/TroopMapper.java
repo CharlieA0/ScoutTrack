@@ -41,14 +41,14 @@ public class TroopMapper extends DatabaseObjectMapper {
 	
 	/**
 	 * Returns true if data is valid and can be mapped.
-	 * @throws InvalidJsonDataException 
+	 * @throws InvalidDataException 
 	 * @throws NoJsonToParseException 
 	 */
-	public void validate() throws InvalidJsonDataException, NoJsonToParseException {	
+	public void validate() throws InvalidDataException, NoJsonToParseException {	
 		if(json == null) throw new NoJsonToParseException();
 		
 		for(String field : FIELDS) {
-			if(!json.has(field)) throw new InvalidJsonDataException();
+			if(!json.has(field)) throw new InvalidDataException();
 		}
 		
 		this.name = json.get("name").getAsString();
@@ -57,8 +57,8 @@ public class TroopMapper extends DatabaseObjectMapper {
 		this.validated = true;
 	}
 	
-	public String validateName(String name) throws InvalidJsonDataException {
-		if(!checkString(name, TROOP_NAME_LENGTH)) throw new InvalidJsonDataException();
+	public String validateName(String name) throws InvalidDataException {
+		if(!checkString(name, TROOP_NAME_LENGTH)) throw new InvalidDataException();
 		return name;
 	}
 	

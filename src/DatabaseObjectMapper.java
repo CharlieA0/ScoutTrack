@@ -18,5 +18,5 @@ public abstract class DatabaseObjectMapper {
 		return true;
 	}	
 	
-	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidJsonDataException, NoJsonToParseException;
+	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException;
 }
