@@ -554,6 +554,8 @@ public class ScoutTrackApi {
             		tokenManager.authenticateTroopLeader(request.headers("Authorization"), id);
             		Troop troop = new Troop(id, sql2o);
             		return new Gson().toJson(troop.queryScouts());
+            	} catch (NoRecordFoundException e) {
+            		return "";
             	} catch (Exception e) {
             		return handle(response, e);
             	}
@@ -588,7 +590,8 @@ public class ScoutTrackApi {
             		int id = Integer.parseInt(request.params("id"));
             		tokenManager.authenticateTroopLeader(request.headers("Authorization"), id);
             		Troop troop = new Troop(id, sql2o);
-            		response.body(new Gson().toJson(troop.queryLeaders()));
+            		return new Gson().toJson(troop.queryLeaders());
+            	} catch (NoRecordFoundException e) {
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
