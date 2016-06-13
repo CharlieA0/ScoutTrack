@@ -150,12 +150,27 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Removes partial requirements of scout from database if they are below the passed rank
 	 * @param rankID id of rank
+	 * @throws Sql2oException thrown if database error occurs
 	 */
-	private void removePartialsBelow(int rankID) {
-		String sql = "DELETE FROM " + DatabaseNames.SCOUT_REQ_TABLE + " WHERE scoutid=:scoutid AND rankid=:rankid";
-		Connection conn = sql2o.beginTransaction();
-		conn.createQuery(sql).addParameter("scoutid", id).addParameter("rankid", rankID).executeUpdate();
-		conn.commit();
+	private void removePartialsBelow(int rankID) throws Sql2oException {
+		try {
+			List <Integer> partialsIds= super.fetchIntsWhere(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", id, "reqid");
+			
+			String sql = "SELECT id FROM " + DatabaseNames.REQ_TABLE + " WHERE rankid < :rankID AND id IN ";
+			super.addCollection(sql, partialsIds.size());
+			Connection conn = sql2o.beginTransaction();
+			Query q = super.addParameters(conn.createQuery(sql), partialsIds).addParameter("rankID", rankID);
+			List <String> slatedIds = q.executeAndFetch(String.class);
+			
+			sql = "DELETE FROM " + DatabaseNames.SCOUT_REQ_TABLE + " WHERE reqid IN ";
+			super.addCollection(sql, slatedIds.size());
+			q = super.addStringParameters(conn.createQuery(sql), slatedIds);
+			q.executeUpdate();
+			conn.commit();
+		} 
+		catch (NoRecordFoundException e) {
+			return; //intentionally swallow exception - no partials need to be removed.
+		}
 	}
 	
 	

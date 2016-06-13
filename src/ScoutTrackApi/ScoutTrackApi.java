@@ -27,7 +27,7 @@ import org.sql2o.Sql2oException;
 public class ScoutTrackApi {
 	private static final byte[] SECRET_KEY = KeyFunctions.generateSHA256();
 	private static final String DB_NAME = "scouttrack";
-	private static final String DB_USERNAME = "Charlie";
+	private static final String DB_USERNAME = "charlie";
 	private static final String DB_PASSWORD = "ui2389j";
 	
 	private static final int HTTP_BAD_REQUEST = 400;

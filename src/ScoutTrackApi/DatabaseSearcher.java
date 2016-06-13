@@ -421,4 +421,9 @@ public class DatabaseSearcher {
 		for(int i = 0; i < param.size(); i++) q.addParameter("value" + i, param.get(i));
 		return q;
 	}
+	
+	public Query addStringParameters(Query q, List<String> param) {
+		for(int i = 0; i < param.size(); i++) q.addParameter("value" + i, param.get(i));
+		return q;
+	}
 }
