@@ -157,14 +157,17 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 			List <Integer> partialsIds= super.fetchIntsWhere(DatabaseNames.SCOUT_REQ_TABLE, "scoutid", id, "reqid");
 			
 			String sql = "SELECT id FROM " + DatabaseNames.REQ_TABLE + " WHERE rankid < :rankID AND id IN ";
-			super.addCollection(sql, partialsIds.size());
+			sql = super.addCollection(sql, partialsIds.size());
 			Connection conn = sql2o.beginTransaction();
 			Query q = super.addParameters(conn.createQuery(sql), partialsIds).addParameter("rankID", rankID);
-			List <String> slatedIds = q.executeAndFetch(String.class);
+			List <String> response = q.executeAndFetch(String.class);
+			
+			List <Integer> slatedIds = new ArrayList<Integer>();
+			for(String id : response) slatedIds.add(Integer.parseInt(id));
 			
 			sql = "DELETE FROM " + DatabaseNames.SCOUT_REQ_TABLE + " WHERE reqid IN ";
-			super.addCollection(sql, slatedIds.size());
-			q = super.addStringParameters(conn.createQuery(sql), slatedIds);
+			sql = super.addCollection(sql, slatedIds.size());
+			q = super.addParameters(conn.createQuery(sql), slatedIds);
 			q.executeUpdate();
 			conn.commit();
 		} 

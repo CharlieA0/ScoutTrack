@@ -236,6 +236,8 @@ public class ScoutTrackApi {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
 	            	Scout scout = new Scout(id, sql2o);
             		return new Gson().toJson(scout.queryMb());
+            	} catch (NoRecordFoundException e) {
+            		return "";            	
             	} catch (Exception e) {
             		return handle(response, e);
             	}
@@ -285,6 +287,8 @@ public class ScoutTrackApi {
 	            	Scout scout = new Scout(id, sql2o);
             		List<RequirementObject> reqs =  scout.queryReq();
             		return new Gson().toJson(reqs);
+            	} catch (NoRecordFoundException e) {
+            		return "";            	
             	} catch (Exception e) {
             		return handle(response, e);
             	}
@@ -661,13 +665,14 @@ public class ScoutTrackApi {
     	 */
         private static String handle(Response response, Exception e) {
        		 if (e instanceof NoRecordFoundException) {
+       			 e.printStackTrace();
        			 response.status(HTTP_BAD_REQUEST);
        			 return "Request Data Invalid, No Record Found";
        		 }
        		 else if (e instanceof JsonSyntaxException || e instanceof InvalidDataException || e instanceof NumberFormatException || e instanceof MalformedJsonException) {
        			 e.printStackTrace();
        			 response.status(HTTP_BAD_REQUEST);
-       			 return "Could Not Parse Request. Request Invalid.";
+       			 return "Could Not Complete Request. Request Invalid.";
        		 }
        		 else if(e instanceof DuplicateRecordException) {
        			 response.status(HTTP_BAD_REQUEST);

@@ -165,7 +165,7 @@ public class ScoutMapper extends UserMapper {
 		int scoutRankID = lookup.queryInt(DatabaseNames.SCOUT_TABLE, "rankid", scoutID);
 		int reqRankID = lookup.idOfRank(reqRankName);
 		if (scoutRankID >= reqRankID) throw new InvalidDataException();
-		int reqID = lookup.idOfRequirement(reqName, rankID);		
+		int reqID = lookup.idOfRequirement(reqName, reqRankID);		
 		return reqID;
 	}
 	

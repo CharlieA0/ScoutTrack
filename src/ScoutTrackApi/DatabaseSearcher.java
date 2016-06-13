@@ -58,7 +58,7 @@ public class DatabaseSearcher {
 		q = addParameters(q, ids);
 		List <String> response = q.executeAndFetch(String.class);
 		
-		if (response == null) throw new NoRecordFoundException();
+		if (response == null || response.size() == 0) throw new NoRecordFoundException();
 		return response;
 	}
 	
@@ -74,7 +74,7 @@ public class DatabaseSearcher {
 		String sql = "SELECT * FROM " + table + " WHERE " + column + " = :value";
 		Connection conn = sql2o.open();
 		List<String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
-		if (response == null) return 0;
+		if (response == null || response.size() == 0) return 0;
 		return response.size();
 	}
 	
@@ -92,7 +92,7 @@ public class DatabaseSearcher {
 		String sql = "SELECT " + retrieveColumn +" FROM " + table + " WHERE " + checkColumn + " = :value";
 		Connection conn = sql2o.open();
 		List <String> response = conn.createQuery(sql).addParameter("value", hasValue).executeAndFetch(String.class);
-		if(response == null) throw new NoRecordFoundException();
+		if(response == null || response.size() == 0) throw new NoRecordFoundException();
 		return response;
 	}
 	
@@ -100,7 +100,7 @@ public class DatabaseSearcher {
 		String sql = "SELECT " + retrieveColumn +" FROM " + table + " WHERE " + checkColumn + " = :value";
 		Connection conn = sql2o.open();
 		List <String> response = conn.createQuery(sql).addParameter("value", hasValue).executeAndFetch(String.class);
-		if(response == null) throw new NoRecordFoundException();
+		if(response == null || response.size() == 0) throw new NoRecordFoundException();
 		return response;
 	}
 	
@@ -119,7 +119,7 @@ public class DatabaseSearcher {
 		Connection conn = sql2o.open();
 		List <String> response = conn.createQuery(sql).addParameter("value", hasValue).executeAndFetch(String.class);
 		
-		if(response == null) throw new NoRecordFoundException();
+		if(response == null || response.size() == 0) throw new NoRecordFoundException();
 		
 		List <Integer> ints = new ArrayList<Integer>();
 		for(String str : response) ints.add(Integer.parseInt(str));
@@ -131,7 +131,7 @@ public class DatabaseSearcher {
 		Connection conn = sql2o.open();
 		List <String> response = conn.createQuery(sql).addParameter("value", hasValue).executeAndFetch(String.class);
 		
-		if(response == null) throw new NoRecordFoundException();
+		if(response == null || response.size() == 0) throw new NoRecordFoundException();
 		
 		List <Integer> ints = new ArrayList<Integer>();
 		for(String str : response) ints.add(Integer.parseInt(str));
@@ -269,7 +269,7 @@ public class DatabaseSearcher {
 		String sql = "SELECT id FROM " + table + " WHERE " + column + " = :value";
 		Connection conn = sql2o.open();
 		List <String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
-		if(response == null) throw new NoRecordFoundException();
+		if(response == null || response.size() == 0) throw new NoRecordFoundException();
 		List <Integer> ids = new ArrayList<Integer>();
 		for(String id : response) ids.add(Integer.parseInt(id));
 		return ids;
@@ -289,7 +289,7 @@ public class DatabaseSearcher {
 		String sql = "SELECT id FROM " + table + " WHERE " + column + " = :value";
 		Connection conn = sql2o.open();
 		List <String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
-		if(response == null) throw new NoRecordFoundException();
+		if(response == null || response.size() == 0) throw new NoRecordFoundException();
 		List <Integer> ids = new ArrayList<Integer>();
 		for(String id : response) ids.add(Integer.parseInt(id));
 		return ids;
@@ -401,8 +401,10 @@ public class DatabaseSearcher {
 	 * @param sql sql statement
 	 * @param size size of the collection
 	 * @return sql statement with added collection
+	 * @throws NoRecordFoundException thrown if empty list is passed
 	 */
-	public String addCollection(String sql, int size) {
+	public String addCollection(String sql, int size) throws NoRecordFoundException {
+		if(size == 0) throw new NoRecordFoundException();	
 		sql += "(";
 		for (int i = 0; i < size - 1; i++) {
 			sql += ":value" + i + ", ";
@@ -418,11 +420,6 @@ public class DatabaseSearcher {
 	 * @return query with passed parameters
 	 */
 	public Query addParameters(Query q, List<Integer> param) {
-		for(int i = 0; i < param.size(); i++) q.addParameter("value" + i, param.get(i));
-		return q;
-	}
-	
-	public Query addStringParameters(Query q, List<String> param) {
 		for(int i = 0; i < param.size(); i++) q.addParameter("value" + i, param.get(i));
 		return q;
 	}
