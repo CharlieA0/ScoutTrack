@@ -250,7 +250,7 @@ public class ScoutTrackApi {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
 	            	Scout scout = new Scout(id, sql2o);
-            		scout.addMb(request.queryParams("mbName"));
+            		scout.addMb(request.queryParams("name"));
             		return"";
             	} catch (Exception e) {
             		return handle(response, e);
@@ -264,7 +264,7 @@ public class ScoutTrackApi {
             	try {
             		int id = tokenManager.authenticateScout(request.headers("Authorization"));
 	            	Scout scout = new Scout(id, sql2o);
-            		scout.destroyMb(request.queryParams("meritbadgeName"));
+            		scout.destroyMb(request.queryParams("name"));
             		return "";
             	} catch (Exception e) {
             		return handle(response, e);
