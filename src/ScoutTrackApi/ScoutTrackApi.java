@@ -5,7 +5,6 @@ import static spark.Spark.put;
 
 import static spark.Spark.delete;
 
-import java.text.ParseException;
 import java.util.List;
 
 import spark.Response;
@@ -669,22 +668,18 @@ public class ScoutTrackApi {
     	 */
         private static String handle(Response response, Exception e) {
        		 if (e instanceof NoRecordFoundException) {
-       			 e.printStackTrace();
        			 response.status(HTTP_BAD_REQUEST);
        			 return "Request Data Invalid, No Record Found";
        		 }
        		 else if (e instanceof JsonSyntaxException || e instanceof InvalidDataException || e instanceof NumberFormatException || e instanceof MalformedJsonException) {
-       			 e.printStackTrace();
        			 response.status(HTTP_BAD_REQUEST);
        			 return "Could Not Complete Request. Request Invalid.";
        		 }
        		 else if(e instanceof DuplicateRecordException) {
-       			 e.printStackTrace();
        			 response.status(HTTP_BAD_REQUEST);
        			 return "Could not complete request. Unique record can not contain " + e.toString() + ".";
        		 }
        		 else if(e instanceof AuthenticationException) {
-       			 e.printStackTrace();
        			 response.status(HTTP_ACCESS_DENIED);
        			 return "Could Not Authenticate. Access Denied.";
        		 }

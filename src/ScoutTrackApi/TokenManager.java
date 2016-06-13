@@ -87,7 +87,6 @@ public class TokenManager extends DatabaseSearcher {
 	public int authenticateTroopLeader(String tokenString, int troopID) throws AuthenticationException, JOSEException    {
 		int leaderID = authenticate(tokenString, ScoutTrackToken.LEADER_TYPE);
 		try {
-			System.out.println(super.queryInt(DatabaseNames.LEADER_TABLE, "troopid", leaderID));
 			if(super.queryInt(DatabaseNames.LEADER_TABLE, "troopid", leaderID) != troopID) throw new AuthenticationException(); //Should I just make an additional claim? I think probably no b/c I can't revoke the jwt.
 		} catch (NoRecordFoundException e) {
 			throw new AuthenticationException(); // thrown because leader no longer exists in database (was deleted) and no longer has access to troop.

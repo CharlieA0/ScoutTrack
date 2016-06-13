@@ -93,13 +93,10 @@ public class Troop extends DatabaseSearcher implements DatabaseObject{
 	 */
 	private int addTroop(String name)throws Sql2oException {
 		String sql = "INSERT INTO " + DatabaseNames.TROOP_TABLE + " (name) VALUES (:name);";
-		try (Connection conn = sql2o.beginTransaction()) {
-			int id = conn.createQuery(sql, true).addParameter("name", name).executeUpdate().getKey(Integer.class);
-			conn.commit();
-			return id;
-		} catch (Sql2oException e) {
-			System.out.println(e);
-			throw e;
-		}
+		Connection conn = sql2o.beginTransaction();
+		int id = conn.createQuery(sql, true).addParameter("name", name).executeUpdate().getKey(Integer.class);
+		conn.commit();
+		return id;
+
 	}
 }
