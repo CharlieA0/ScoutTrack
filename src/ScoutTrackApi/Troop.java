@@ -72,17 +72,17 @@ public class Troop extends DatabaseSearcher implements DatabaseObject{
 	 * @throws Sql2oException thrown if database error
 	 */
 	public List <Integer> queryScouts() throws Sql2oException, NoRecordFoundException {
-		return super.searchIds(DatabaseNames.SCOUT_TABLE, "id", id);
+		return super.searchIds(DatabaseNames.SCOUT_TABLE, "troopid", id);
 	}
 	
 	/**
 	 * Retrieves list of leaders in troop from database
 	 * @return list of leaders in troop
 	 * @throws NoRecordFoundException thrown if no leaders with troopid of this troop found
-	 * @throws Sql2oException  thrown if database error
+	 * @throws Sql2oException thrown if database error
 	 */
 	public List <Integer> queryLeaders() throws Sql2oException, NoRecordFoundException {
-		return super.searchIds(DatabaseNames.LEADER_TABLE, "id", id);
+		return super.searchIds(DatabaseNames.LEADER_TABLE, "troopid", id);
 	}
 	
 	/**
