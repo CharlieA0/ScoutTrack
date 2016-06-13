@@ -58,11 +58,10 @@ public class TokenManager extends DatabaseSearcher {
 	 * Authenticates scout JWT
 	 * @param tokenString the serialized JWT
 	 * @return id of the scout
-	 * @throws ParseException thrown if JWT can not be parsed
 	 * @throws AuthenticationException thrown if authentication fails
 	 * @throws JOSEException thrown if encryption fails
 	 */
-	public int authenticateScout(String tokenString) throws ParseException, AuthenticationException, JOSEException {
+	public int authenticateScout(String tokenString) throws AuthenticationException, JOSEException {
 		return authenticate(tokenString, ScoutTrackToken.SCOUT_TYPE);
 	}
 	
@@ -70,11 +69,10 @@ public class TokenManager extends DatabaseSearcher {
 	 * Authenticates leader JWT
 	 * @param tokenString the serialized JWT
 	 * @return id of the Leader
-	 * @throws ParseException thrown if JWT can not be parsed
 	 * @throws AuthenticationException thrown if authentication fails
 	 * @throws JOSEException thrown if encryption fails
 	 */
-	public int authenticateLeader(String tokenString) throws ParseException, AuthenticationException, JOSEException {
+	public int authenticateLeader(String tokenString) throws AuthenticationException, JOSEException {
 		return authenticate(tokenString, ScoutTrackToken.LEADER_TYPE);
 	}
 	
@@ -83,11 +81,10 @@ public class TokenManager extends DatabaseSearcher {
 	 * @param tokenString the serialized JWT
 	 * @param troopID the id of the troop
 	 * @return id of the Leader
-	 * @throws ParseException thrown if JWT can not be parsed
 	 * @throws AuthenticationException thrown if authentication fails
 	 * @throws JOSEException thrown if encryption fails
 	 */
-	public int authenticateTroopLeader(String tokenString, int troopID) throws ParseException, AuthenticationException, JOSEException    {
+	public int authenticateTroopLeader(String tokenString, int troopID) throws AuthenticationException, JOSEException    {
 		int leaderID = authenticate(tokenString, ScoutTrackToken.LEADER_TYPE);
 		try {
 			if(super.queryInt(DatabaseNames.LEADER_TABLE, "troopid", leaderID) != troopID) throw new AuthenticationException(); //Should I just make an additional claim? I think probably no b/c I can't revoke the jwt.
@@ -102,16 +99,19 @@ public class TokenManager extends DatabaseSearcher {
 	 * @param tokenString the serialized JWT
 	 * @param userType type of user
 	 * @return id of the user
-	 * @throws ParseException thrown if JWT can not be parsed
 	 * @throws AuthenticationException thrown if authentication fails
 	 * @throws JOSEException thrown if encryption fails
 	 */
-	private int authenticate(String tokenString, int userType) throws ParseException, AuthenticationException, JOSEException {
-		if (tokenString == null) throw new AuthenticationException();
-		SignedJWT token = SignedJWT.parse(tokenString);
-		if (!inspectSignature(token)) throw new AuthenticationException();
-		if (token.getJWTClaimsSet().getIntegerClaim("typ") != userType) throw new AuthenticationException();
-		return token.getJWTClaimsSet().getIntegerClaim("id");
+	private int authenticate(String tokenString, int userType) throws AuthenticationException, JOSEException {
+		try {
+			if (tokenString == null) throw new AuthenticationException();
+			SignedJWT token = SignedJWT.parse(tokenString);
+			if (!inspectSignature(token)) throw new AuthenticationException();
+			if (token.getJWTClaimsSet().getIntegerClaim("typ") != userType) throw new AuthenticationException();
+			return token.getJWTClaimsSet().getIntegerClaim("id");
+		} catch (ParseException e) {
+			throw new AuthenticationException();
+		}
 	}
 	
 	/**
