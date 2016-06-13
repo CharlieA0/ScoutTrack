@@ -86,6 +86,7 @@ public class Leader extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Updates leader's email in the database
 	 * @param email the new email
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public void updateEmail(String email) throws Sql2oException {
 		super.updateString(DatabaseNames.LEADER_TABLE, "email", email, id);

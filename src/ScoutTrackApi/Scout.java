@@ -99,6 +99,7 @@ public class Scout extends DatabaseSearcher implements DatabaseObject, User{
 	/**
 	 * Updates scout's email in database
 	 * @param email the new email
+	 * @throws Sql2oException thrown if database error occurs
 	 */
 	public void updateEmail(String email) throws Sql2oException {
 		super.updateString(DatabaseNames.SCOUT_TABLE, "email", email, id);

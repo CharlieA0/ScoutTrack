@@ -40,6 +40,7 @@ public abstract class DatabaseObjectMapper {
 	 * @throws NoRecordFoundException thrown if json data is inconsistent with that in database
 	 * @throws InvalidDataException thrown if json data can not be read
 	 * @throws NoJsonToParseException thrown if called without proper json data
+	 * @throws DuplicateRecordException thrown if email is already in the database
 	 */
-	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException;
+	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException, DuplicateRecordException;
 }

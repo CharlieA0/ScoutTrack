@@ -33,12 +33,25 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 	 * @param sql2o database object
 	 * @return email of user
 	 * @throws InvalidDataException thrown if email fails to validate
+	 * @throws DuplicateRecordException thrown if email is already in the database
 	 */
-	public String validateEmail(String email, Sql2o sql2o) throws InvalidDataException {
+	public String validateEmail(String email, Sql2o sql2o) throws InvalidDataException, DuplicateRecordException {
 		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidDataException();
 		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
-		if(lookup.checkPresent(DatabaseNames.LEADER_TABLE, "email", email)) throw new InvalidDataException("email already in database");
-		if(lookup.checkPresent(DatabaseNames.SCOUT_TABLE, "email", email)) throw new InvalidDataException("email already in database");
+		if(lookup.checkPresent(DatabaseNames.LEADER_TABLE, "email", email)) throw new DuplicateRecordException("email");
+		if(lookup.checkPresent(DatabaseNames.SCOUT_TABLE, "email", email))throw new DuplicateRecordException("email");
+		return email;
+	}
+	
+	/**
+	 * Validates User's email string (Note, this doesn't check for duplicate emails in database)
+	 * @param email email of the user
+	 * @param sql2o database object
+	 * @return email of user
+	 * @throws InvalidDataException thrown if email fails to validate
+	 */
+	public String validateEmailString(String email, Sql2o sql2o) throws InvalidDataException {
+		if(!checkString(email, EMAIL_LENGTH)) throw new InvalidDataException();
 		return email;
 	}
 	
@@ -75,5 +88,5 @@ public abstract class UserMapper extends DatabaseObjectMapper {
 	/**
 	 * Confirms user data is valid
 	 */
-	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException;
+	public abstract void validate() throws Sql2oException, NoRecordFoundException, InvalidDataException, NoJsonToParseException, DuplicateRecordException;
 }

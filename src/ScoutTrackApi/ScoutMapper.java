@@ -68,8 +68,9 @@ public class ScoutMapper extends UserMapper {
 	 * @throws Sql2oException thrown by database error
 	 * @throws InvalidDataException thrown if json is malformed
 	 * @throws NoJsonToParseException thrown if object constructed without data
+	 * @throws DuplicateRecordException thrown if email is already in the database
 	 */
-	public void validate() throws Sql2oException, InvalidDataException, NoJsonToParseException {
+	public void validate() throws Sql2oException, InvalidDataException, NoJsonToParseException, DuplicateRecordException {
 		if(json == null) throw new NoJsonToParseException();
 		
 		//Check json has all the necessary fields
@@ -213,9 +214,19 @@ public class ScoutMapper extends UserMapper {
 	 * Validates Scout Email
 	 * @param email string to test
 	 * @return email
+	 * @throws DuplicateRecordException thrown if email is already in the database
 	 */
-	public String validateEmail(String email) throws InvalidDataException {
+	public String validateEmail(String email) throws InvalidDataException, DuplicateRecordException {
 		return super.validateEmail(email, sql2o);
+	}
+	
+	/**
+	 * Validates string id valid email (doesn't check for duplicates)
+	 * @param email string to test
+	 * @return email
+	 */
+	public String validateEmailString(String email) throws InvalidDataException {
+		return super.validateEmailString(email, sql2o);
 	}
 	
 	/**

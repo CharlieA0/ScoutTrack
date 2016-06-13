@@ -56,8 +56,9 @@ public class LeaderMapper extends UserMapper {
 	 * @throws Sql2oException thrown if database error occurs
 	 * @throws InvalidDataException thrown if json data is invalid
 	 * @throws NoJsonToParseException thrown if json data was not passed
+	 * @throws DuplicateRecordException thrown if email is already in the database
 	 */
-	public void validate() throws Sql2oException, InvalidDataException, NoJsonToParseException {
+	public void validate() throws Sql2oException, InvalidDataException, NoJsonToParseException, DuplicateRecordException {
 		if(json == null) throw new NoJsonToParseException();
 		
 		DatabaseSearcher lookup = new DatabaseSearcher(sql2o);
@@ -102,9 +103,19 @@ public class LeaderMapper extends UserMapper {
 	 * Checks string is valid email
 	 * @param email string to test
 	 * @throws InvalidDataException thrown if string is not valid hash
+	 * @throws DuplicateRecordException thrown if email is already in the database
 	 */
-	public String validateEmail(String email) throws InvalidDataException {
+	public String validateEmail(String email) throws InvalidDataException, DuplicateRecordException {
 		return super.validateEmail(email, sql2o);
+	}
+	
+	/**
+	 * Validates string id valid email (doesn't check for duplicates)
+	 * @param email string to test
+	 * @return email
+	 */
+	public String validateEmailString(String email) throws InvalidDataException {
+		return super.validateEmailString(email, sql2o);
 	}
 	
 	/**
@@ -115,7 +126,6 @@ public class LeaderMapper extends UserMapper {
 	public String validatePwd(String pwd) throws InvalidDataException {
 		return super.validatePwd(pwd);
 	}
-	
 	
 	/**
 	 * Constructs a Leader object and stores data in database

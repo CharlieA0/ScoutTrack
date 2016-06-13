@@ -63,6 +63,22 @@ public class DatabaseSearcher {
 	}
 	
 	/**
+	 * Finds number of entries in table with value in column
+	 * @param table table to search
+	 * @param column column to search in
+	 * @param value value to look for
+	 * @return number of records found
+	 * @throws Sql2oException thrown if database error occurs
+	 */
+	public int queryNumberEntries(String table, String column, String value) throws Sql2oException {
+		String sql = "SELECT * FROM " + table + " WHERE " + column + " = :value";
+		Connection conn = sql2o.open();
+		List<String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
+		if (response == null) return 0;
+		return response.size();
+	}
+	
+	/**
 	 * Retrieves list of strings from database where a column equals value
 	 * @param table database table
 	 * @param checkColumn column to compare to value
@@ -258,6 +274,7 @@ public class DatabaseSearcher {
 		for(String id : response) ids.add(Integer.parseInt(id));
 		return ids;
 	}
+
 	
 	/**
 	 * Retrieve ids of all records in table where column equals string value
@@ -268,12 +285,14 @@ public class DatabaseSearcher {
 	 * @throws NoRecordFoundException thrown if no records with columns of that value are found
 	 * @throws Sql2oException thrown by database error
 	 */
-	public List<String> searchIds(String table, String column, String value) throws NoRecordFoundException, Sql2oException {
+	public List<Integer> searchIds(String table, String column, String value) throws NoRecordFoundException, Sql2oException {
 		String sql = "SELECT id FROM " + table + " WHERE " + column + " = :value";
 		Connection conn = sql2o.open();
 		List <String> response = conn.createQuery(sql).addParameter("value", value).executeAndFetch(String.class);
 		if(response == null) throw new NoRecordFoundException();
-		return response;
+		List <Integer> ids = new ArrayList<Integer>();
+		for(String id : response) ids.add(Integer.parseInt(id));
+		return ids;
 	} 
 	
 	/**

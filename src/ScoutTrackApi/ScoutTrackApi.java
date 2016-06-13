@@ -619,7 +619,7 @@ public class ScoutTrackApi {
             get("/scout/token", (request, response)-> {
                 try {
                 	ScoutMapper map = new ScoutMapper(sql2o);
-                	return tokenManager.getToken(map.validateEmail(request.queryParams("email")), new ScoutMapper(sql2o).validatePwd(request.queryParams("pwd")), ScoutTrackToken.SCOUT_TYPE);
+                	return tokenManager.getToken(map.validateEmailString(request.queryParams("email")), map.validatePwd(request.queryParams("pwd")), ScoutTrackToken.SCOUT_TYPE);
                 } catch (Exception e) {
                 	return handle(response, e);
                 }
@@ -630,7 +630,8 @@ public class ScoutTrackApi {
            */
             get("/leader/token", (request, response)-> {
                 try {
-                	return tokenManager.getToken(request.queryParams("email"), request.queryParams("pwd"), ScoutTrackToken.LEADER_TYPE);
+                	LeaderMapper map = new LeaderMapper(sql2o);
+                	return tokenManager.getToken(map.validateEmailString(request.queryParams("email")), map.validatePwd(request.queryParams("pwd")), ScoutTrackToken.LEADER_TYPE);
                 } catch (Exception e) {
                 	return handle(response, e);
                 }
@@ -664,8 +665,13 @@ public class ScoutTrackApi {
        			 return "Request Data Invalid, No Record Found";
        		 }
        		 else if (e instanceof JsonSyntaxException || e instanceof InvalidDataException || e instanceof NumberFormatException || e instanceof MalformedJsonException) {
+       			 e.printStackTrace();
        			 response.status(HTTP_BAD_REQUEST);
-       			 return "Could Not Parse Request. Request Invalid."; //Implement Unique Email Exception
+       			 return "Could Not Parse Request. Request Invalid.";
+       		 }
+       		 else if(e instanceof DuplicateRecordException) {
+       			 response.status(HTTP_BAD_REQUEST);
+       			 return "Could not complete request. Unique record can not contain " + e.toString() + ".";
        		 }
        		 else if(e instanceof AuthenticationException) {
        			 response.status(HTTP_ACCESS_DENIED);
