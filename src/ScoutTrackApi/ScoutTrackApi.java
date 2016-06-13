@@ -676,10 +676,12 @@ public class ScoutTrackApi {
        			 return "Could Not Complete Request. Request Invalid.";
        		 }
        		 else if(e instanceof DuplicateRecordException) {
+       			 e.printStackTrace();
        			 response.status(HTTP_BAD_REQUEST);
        			 return "Could not complete request. Unique record can not contain " + e.toString() + ".";
        		 }
        		 else if(e instanceof AuthenticationException) {
+       			 e.printStackTrace();
        			 response.status(HTTP_ACCESS_DENIED);
        			 return "Could Not Authenticate. Access Denied.";
        		 }
