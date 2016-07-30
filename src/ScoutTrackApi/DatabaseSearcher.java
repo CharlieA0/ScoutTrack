@@ -63,6 +63,36 @@ public class DatabaseSearcher {
 	}
 	
 	/**
+	 * Retrieves a column of strings from the database
+	 * @param table database table	
+	 * @param column database column
+	 * @return List containing strings in the column
+	 * @throws NoRecordFoundException thrown if no record is found.
+	 */
+	public List <String> queryStringColumn(String table, String column) throws NoRecordFoundException {
+		String sql = "SELECT " + column + " FROM " + table;
+		Connection conn = sql2o.open();
+		List <String> response = conn.createQuery(sql).executeAndFetch(String.class);
+		if (response == null || response.size() == 0) throw new NoRecordFoundException();
+		return response;
+	}
+	
+	public List <Integer> queryIntColumn(String table, String column) throws NoRecordFoundException {
+		//Make Query
+		String sql = "SELECT " + column + " FROM " + table;
+		Connection conn = sql2o.open();
+		List <String> response = conn.createQuery(sql).executeAndFetch(String.class);
+		
+		//Check that records were found
+		if (response == null || response.size() == 0) throw new NoRecordFoundException();
+		
+		//Convert to ints safely
+		List <Integer> ints = new ArrayList<Integer>();
+		for(String str : response) ints.add(Integer.parseInt(str));
+		return ints;
+	}
+	
+	/**
 	 * Finds number of entries in table with value in column
 	 * @param table table to search
 	 * @param column column to search in
